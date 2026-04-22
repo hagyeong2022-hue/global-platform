@@ -1,6 +1,10 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+const ALLOWED_EMAILS = [
+  "removed@example.com",
+];
+
 const handler = NextAuth({
   providers: [
     GoogleProvider({
@@ -12,8 +16,9 @@ const handler = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    async signIn({ account }) {
-      return account?.provider === "google";
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") return false;
+      return ALLOWED_EMAILS.includes(user.email ?? "");
     },
   },
 });
