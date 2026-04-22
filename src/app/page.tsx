@@ -1,65 +1,71 @@
-import Image from "next/image";
+import KpiCard from "@/components/KpiCard";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col gap-8">
+      {/* KPI 카드 */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">주요 현황</h2>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <KpiCard
+            title="올해 진출 지원 국가"
+            value="—"
+            sub="누적 —개국"
+            color="blue"
+          />
+          <KpiCard
+            title="관리 기업 수"
+            value="—"
+            color="green"
+          />
+          <KpiCard
+            title="당년도 매출액 합산"
+            value="—"
+            sub="NICE / DART 연동 예정"
+            color="purple"
+          />
+          <KpiCard
+            title="이달의 뉴스"
+            value="—"
+            sub="건"
+            color="orange"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* 오늘의 뉴스 피드 */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">오늘의 뉴스</h2>
+        <div className="bg-white rounded-xl border border-gray-200 p-6 text-sm text-gray-400">
+          뉴스 피드 연동 예정 (5단계)
         </div>
-      </main>
+      </section>
+
+      {/* 기업 목록 */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">기업 목록</h2>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">기업명</th>
+                <th className="px-4 py-3 text-left">대표자</th>
+                <th className="px-4 py-3 text-left">업종</th>
+                <th className="px-4 py-3 text-left">아이템</th>
+                <th className="px-4 py-3 text-left">성장단계</th>
+                <th className="px-4 py-3 text-left">진출 국가</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  구글 시트 연동 예정 (2단계)
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
