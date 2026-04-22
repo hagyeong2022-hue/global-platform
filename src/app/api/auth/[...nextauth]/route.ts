@@ -3,6 +3,12 @@ import GoogleProvider from "next-auth/providers/google";
 
 const ALLOWED_EMAILS = [
   "hagyeong2022@gmail.com",
+  "surimlee96@gmail.com",
+  "joeunsora@gmail.com",
+  "pomme21152011@gmail.com",
+  "jesse9402@gmail.com",
+  "sparklinleaf@gmail.com",
+  "sbahylee@gmail.com",
 ];
 
 const handler = NextAuth({
