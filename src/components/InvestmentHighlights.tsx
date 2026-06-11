@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Company } from "@/lib/googleSheets";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import StageBadge from "@/components/ui/StageBadge";
-import { formatMillionsKRW } from "@/lib/format";
+import { formatKRW } from "@/lib/format";
 
 // 투자유치 하이라이트 — investmentStage 보유 기업, 최근 투자일 순 (데이터 없으면 렌더 안 함)
 export default function InvestmentHighlights({ companies }: { companies: Company[] }) {
@@ -31,9 +31,9 @@ export default function InvestmentHighlights({ companies }: { companies: Company
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <StageBadge stage={c.investmentStage} />
-              {c.investmentAmount && (
+              {formatKRW(c.investmentAmount) && (
                 <span className="text-xs text-secondary tnum">
-                  {formatMillionsKRW(c.investmentAmount)}원
+                  {formatKRW(c.investmentAmount)}원
                 </span>
               )}
             </div>

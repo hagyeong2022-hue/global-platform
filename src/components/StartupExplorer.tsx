@@ -7,6 +7,7 @@ import type { Company } from "@/lib/googleSheets";
 import StageBadge from "@/components/ui/StageBadge";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import { countryFlag } from "@/lib/countryFlag";
+import { formatKRW, parseWon } from "@/lib/format";
 
 // ─── 필터 축 정의 ───────────────────────────────────────────
 type FilterKey = "year" | "industry" | "country" | "program" | "stage";
@@ -34,7 +35,7 @@ const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => s
   { key: "country", label: "진출 국가", sortValue: (c) => c.region },
   { key: "program", label: "프로그램", sortValue: (c) => c.programName },
   { key: "establishedDate", label: "설립일", sortValue: (c) => c.establishedDate },
-  { key: "revenue", label: "매출(백만원)", sortValue: (c) => c.revenue.padStart(12, "0") },
+  { key: "revenue", label: "매출", sortValue: (c) => String(parseWon(c.revenue)).padStart(15, "0") },
   { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0") },
 ];
 
@@ -466,7 +467,7 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
                       <td className="px-4 py-3 whitespace-nowrap text-secondary tnum">{c.establishedDate || "—"}</td>
                     )}
                     {visibleCols.includes("revenue") && (
-                      <td className="px-4 py-3 whitespace-nowrap text-secondary tnum text-right">{c.revenue || "—"}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-secondary tnum text-right">{formatKRW(c.revenue) ? `${formatKRW(c.revenue)}원` : "—"}</td>
                     )}
                     {visibleCols.includes("employment") && (
                       <td className="px-4 py-3 whitespace-nowrap text-secondary tnum text-right">{c.employment || "—"}</td>

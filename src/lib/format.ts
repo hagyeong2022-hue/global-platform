@@ -1,16 +1,29 @@
-/** 시트의 백만원 단위 숫자 문자열 → 표시용 (예: "1234" → "12.3억", "50" → "5,000만원") */
-export function formatMillionsKRW(raw: string): string {
-  const n = Number(String(raw).replace(/[,\s원]/g, ""));
-  if (!raw || isNaN(n) || n === 0) return "";
-  if (n >= 10000) return `${(n / 10000).toLocaleString("ko-KR", { maximumFractionDigits: 1 })}조`;
-  if (n >= 100) return `${(n / 100).toLocaleString("ko-KR", { maximumFractionDigits: 1 })}억`;
-  return `${(n * 100).toLocaleString("ko-KR")}만원`;
+// 시트의 매출(S)·투자(T) 값은 헤더가 "백만원"이지만 실제 입력은 원(raw) 단위로 혼재됨.
+// → 원(raw KRW)으로 해석해 사람이 읽는 한국어 금액으로 변환한다.
+
+const JO = 1_0000_0000_0000; // 10^12 (조)
+const EOK = 1_0000_0000; // 10^8 (억)
+const MAN = 1_0000; // 10^4 (만)
+
+/** 숫자/문자(콤마·원·공백 포함) → 원 단위 정수. 비숫자·빈값은 0 */
+export function parseWon(raw: string | number | undefined | null): number {
+  if (raw == null) return 0;
+  const n = typeof raw === "number" ? raw : Number(String(raw).replace(/[,\s원]/g, ""));
+  return Number.isFinite(n) ? n : 0;
 }
 
-/** 백만원 단위 문자열 합산 (숫자 아닌 값은 무시) */
-export function sumMillions(values: string[]): number {
-  return values.reduce((acc, v) => {
-    const n = Number(String(v).replace(/[,\s원]/g, ""));
-    return acc + (isNaN(n) ? 0 : n);
-  }, 0);
+/** 원 단위 금액 → "1.7조" / "172억" / "700만" / "5,000". 0/빈값은 "" */
+export function formatKRW(raw: string | number | undefined | null): string {
+  const n = parseWon(raw);
+  if (n === 0) return "";
+  const opt = { maximumFractionDigits: 1 } as const;
+  if (n >= JO) return `${(n / JO).toLocaleString("ko-KR", opt)}조`;
+  if (n >= EOK) return `${(n / EOK).toLocaleString("ko-KR", opt)}억`;
+  if (n >= MAN) return `${Math.round(n / MAN).toLocaleString("ko-KR")}만`;
+  return n.toLocaleString("ko-KR");
+}
+
+/** 원 단위 값들의 합 (비숫자 무시) */
+export function sumWon(values: (string | number | undefined | null)[]): number {
+  return values.reduce<number>((acc, v) => acc + parseWon(v), 0);
 }

@@ -5,7 +5,7 @@ import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import StageBadge from "@/components/ui/StageBadge";
 import CompanyNewsTabs from "@/components/CompanyNewsTabs";
 import { countryFlag } from "@/lib/countryFlag";
-import { formatMillionsKRW } from "@/lib/format";
+import { formatKRW } from "@/lib/format";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -97,16 +97,16 @@ export default async function CompanyDetailPage({
     },
     {
       label: "매출",
-      node: company.revenue ? (
-        <span className="text-primary font-semibold tnum">{formatMillionsKRW(company.revenue)}원</span>
+      node: formatKRW(company.revenue) ? (
+        <span className="text-primary font-semibold tnum">{formatKRW(company.revenue)}원</span>
       ) : (
         <span className="text-secondary" title="NICE / DART 연동 예정">—</span>
       ),
     },
     {
       label: "투자유치",
-      node: company.investmentAmount ? (
-        <span className="text-primary font-semibold tnum">{formatMillionsKRW(company.investmentAmount)}원</span>
+      node: formatKRW(company.investmentAmount) ? (
+        <span className="text-primary font-semibold tnum">{formatKRW(company.investmentAmount)}원</span>
       ) : (
         <span className="text-secondary">—</span>
       ),

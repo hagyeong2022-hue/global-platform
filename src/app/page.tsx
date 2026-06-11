@@ -5,7 +5,7 @@ import NewsCalendar from "@/components/NewsCalendar";
 import InvestmentHighlights from "@/components/InvestmentHighlights";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
-import { formatMillionsKRW, sumMillions } from "@/lib/format";
+import { formatKRW, sumWon } from "@/lib/format";
 
 export const revalidate = 60;
 
@@ -19,12 +19,14 @@ export default async function Home() {
 
   const news = await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
 
-  // 당년도 매출 합산 — 시트 S열(백만원). 당년도 데이터 없으면 전체 누적으로 대체
-  const currentRevenue = sumMillions(currentYearCompanies.map((c) => c.revenue));
-  const totalRevenue = sumMillions(companies.map((c) => c.revenue));
-  const revenueValue = currentRevenue > 0 ? currentRevenue : totalRevenue;
-  const revenueLabel =
-    currentRevenue > 0 ? `${currentYear}년 기업 제출수치 합산` : "전체 기업 제출수치 합산";
+  // 매출 합산 — 시트 제출 수치(원 단위). 기업이 여러 해 참가하므로 기업별 최신 1건만 합산
+  const latestRevByCompany = new Map<string, (typeof companies)[number]>();
+  for (const c of companies) {
+    if (!c.revenue) continue;
+    const prev = latestRevByCompany.get(c.name);
+    if (!prev || Number(c.year) > Number(prev.year)) latestRevByCompany.set(c.name, c);
+  }
+  const revenueWon = sumWon([...latestRevByCompany.values()].map((c) => c.revenue));
 
   // 이달의 뉴스 건수
   const now = new Date();
@@ -62,11 +64,11 @@ export default async function Home() {
             href="/startups"
           />
           <KpiCard
-            title="매출액 합산"
-            value={revenueValue > 0 ? `${formatMillionsKRW(String(revenueValue))}원` : "—"}
-            sub={revenueValue > 0 ? revenueLabel : "NICE / DART 연동 예정"}
+            title="매출 합산"
+            value={revenueWon > 0 ? `${formatKRW(revenueWon)}원` : "—"}
+            sub={revenueWon > 0 ? `참여기업 제출 매출 (${latestRevByCompany.size}개사)` : "NICE / DART 연동 예정"}
             color="purple"
-            href={`/startups?year=${currentYear}`}
+            href="/startups"
           />
           <KpiCard
             title="이달의 뉴스"
