@@ -8,6 +8,7 @@ import { signOut } from "next-auth/react";
 const MENUS = [
   { href: "/", label: "홈" },
   { href: "/startups", label: "스타트업" },
+  { href: "/bookmarks", label: "관심기업" },
   { href: "/programs", label: "프로그램" },
   { href: "/news", label: "뉴스" },
   { href: "/email", label: "이메일" },

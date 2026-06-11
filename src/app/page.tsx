@@ -45,6 +45,13 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-10">
       <section>
+        <h2 className="text-base font-semibold text-primary mb-4">오늘의 뉴스</h2>
+        <NewsFeed news={topNews} />
+      </section>
+
+      <InvestmentHighlights companies={companies} />
+
+      <section>
         <h2 className="text-base font-semibold text-primary mb-4">주요 현황</h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard
@@ -75,13 +82,6 @@ export default async function Home() {
             href="/news"
           />
         </div>
-      </section>
-
-      <InvestmentHighlights companies={companies} />
-
-      <section>
-        <h2 className="text-base font-semibold text-primary mb-4">오늘의 뉴스</h2>
-        <NewsFeed news={topNews} />
       </section>
 
       <section className="flex justify-center pb-4">

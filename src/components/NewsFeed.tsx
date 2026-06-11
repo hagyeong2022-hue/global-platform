@@ -22,7 +22,7 @@ function NewsCard({ companyName, item, category, score }: CompanyNewsItem) {
         <span className="text-sm font-semibold text-primary truncate">{companyName}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           {score >= 8 && (
-            <span className="inline-block text-[11px] font-medium text-[#FBBF24] bg-[#FBBF24]/15 px-2 py-0.5 rounded-full">
+            <span className="inline-block text-[11px] font-medium text-[#B45309] bg-[#D97706]/15 px-2 py-0.5 rounded-full">
               주요
             </span>
           )}

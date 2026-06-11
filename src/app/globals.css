@@ -1,19 +1,19 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
 
-/* 디자인 토큰 — 기획서 §4-1 (다크 네이비 + SBA 블루) */
+/* 디자인 토큰 — 서울스타트업허브 브랜드 라이트 모드 */
 @theme {
-  --color-base: #0b1120;
-  --color-surface: #141c2f;
-  --color-elevated: #1c2740;
-  --color-edge: #243049;
-  --color-primary: #f1f5f9;
-  --color-secondary: #94a3b8;
-  --color-accent: #3b82f6;
-  --color-accent-hover: #60a5fa;
-  --color-accent-soft: rgba(59, 130, 246, 0.15);
-  --color-positive: #34d399;
-  --color-negative: #f87171;
+  --color-base: #EFF3FA;
+  --color-surface: #FFFFFF;
+  --color-elevated: #E2EAF6;
+  --color-edge: #C6D4EA;
+  --color-primary: #0D1E3A;
+  --color-secondary: #5A6E8C;
+  --color-accent: #1A56DB;
+  --color-accent-hover: #1447C0;
+  --color-accent-soft: rgba(26, 86, 219, 0.1);
+  --color-positive: #0E9E5A;
+  --color-negative: #DC2626;
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR",
     sans-serif;
@@ -30,7 +30,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* 스크롤바 (다크) */
+/* 스크롤바 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -39,9 +39,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2b3a5c;
+  background: #C6D4EA;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b4d75;
+  background: #9AB0D0;
 }

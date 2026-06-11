@@ -11,8 +11,8 @@ interface KpiCardProps {
 const ACCENTS = {
   blue: "text-accent",
   green: "text-positive",
-  purple: "text-[#A78BFA]",
-  orange: "text-[#FBBF24]",
+  purple: "text-[#6D28D9]",
+  orange: "text-[#D97706]",
 };
 
 export default function KpiCard({ title, value, sub, color = "blue", href }: KpiCardProps) {
