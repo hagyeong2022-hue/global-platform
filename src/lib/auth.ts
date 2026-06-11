@@ -43,6 +43,11 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
+  session: {
+    strategy: "jwt",
+    // 한 번 로그인하면 30일간 유지 (브라우저 종료·재부팅 무관, 영구 쿠키)
+    maxAge: 30 * 24 * 60 * 60,
+  },
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider !== "google") return false;
