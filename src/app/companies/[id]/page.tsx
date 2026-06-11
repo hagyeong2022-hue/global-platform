@@ -6,6 +6,7 @@ import StageBadge from "@/components/ui/StageBadge";
 import CompanyNewsTabs from "@/components/CompanyNewsTabs";
 import { countryFlag } from "@/lib/countryFlag";
 import { formatKRW } from "@/lib/format";
+import { resolveRevenue, SOURCE_LABEL, SOURCE_COLOR } from "@/lib/companyMetrics";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -78,7 +79,10 @@ export default async function CompanyDetailPage({
     .slice(0, 9);
 
   const age = calcAge(company.establishedDate);
-  const news = await searchNews(company.name, 10).catch(() => []);
+  const [news, revenue] = await Promise.all([
+    searchNews(company.name, 10).catch(() => []),
+    resolveRevenue(company).catch(() => null),
+  ]);
 
   const infoGrid: { label: string; node: React.ReactNode }[] = [
     { label: "투자단계", node: <StageBadge stage={company.investmentStage} /> },
@@ -97,10 +101,19 @@ export default async function CompanyDetailPage({
     },
     {
       label: "매출",
-      node: formatKRW(company.revenue) ? (
-        <span className="text-primary font-semibold tnum">{formatKRW(company.revenue)}원</span>
+      node: revenue ? (
+        <span className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-primary font-semibold tnum">{formatKRW(revenue.amountKRW)}원</span>
+          <span
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+            style={{ backgroundColor: `${SOURCE_COLOR[revenue.source]}26`, color: SOURCE_COLOR[revenue.source] }}
+            title={revenue.fiscalYear ? `${revenue.fiscalYear} 회계연도` : undefined}
+          >
+            {SOURCE_LABEL[revenue.source]}
+          </span>
+        </span>
       ) : (
-        <span className="text-secondary" title="NICE / DART 연동 예정">—</span>
+        <span className="text-secondary" title="DART 키 입력 시 자동 수집">—</span>
       ),
     },
     {

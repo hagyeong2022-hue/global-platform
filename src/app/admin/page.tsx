@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCompanies } from "@/lib/googleSheets";
 import AdminClient from "@/components/AdminClient";
 
@@ -19,12 +20,20 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-primary">관리자 — 데이터 편집</h1>
-        <p className="text-sm text-secondary mt-1">
-          성장지표(매출·투자유치·고용·투자단계·최근투자일)를 수정하면 구글 시트에 즉시 반영됩니다.
-          기업명·사업자번호 등 식별정보는 시트에서만 수정하세요.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold text-primary">관리자 — 데이터 편집</h1>
+          <p className="text-sm text-secondary mt-1">
+            성장지표(매출·투자유치·고용·투자단계·최근투자일)를 수정하면 구글 시트에 즉시 반영됩니다.
+            기업명·사업자번호 등 식별정보는 시트에서만 수정하세요.
+          </p>
+        </div>
+        <Link
+          href="/admin/settings"
+          className="shrink-0 px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors"
+        >
+          ⚙ 연동 설정
+        </Link>
       </div>
       <AdminClient companies={companies} />
     </div>
