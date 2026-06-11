@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
 import CommandPalette from "@/components/CommandPalette";
 import SessionWrapper from "@/components/SessionWrapper";
 
@@ -12,11 +12,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="h-full">
-      <body className="min-h-full flex flex-col bg-base text-primary antialiased">
+      <body className="h-full flex bg-base text-primary antialiased">
         <SessionWrapper>
-          <Navbar />
-          <CommandPalette />
-          <main className="flex-1 max-w-[1280px] mx-auto w-full px-6 py-8">{children}</main>
+          <Sidebar />
+          <div className="flex-1 flex flex-col min-h-screen overflow-auto">
+            <CommandPalette />
+            <main className="flex-1 w-full max-w-[1200px] px-8 py-8">{children}</main>
+          </div>
         </SessionWrapper>
       </body>
     </html>

@@ -8,41 +8,37 @@ interface KpiCardProps {
   href?: string;
 }
 
-const ACCENTS = {
-  blue: "text-accent",
-  green: "text-positive",
-  purple: "text-[#6D28D9]",
-  orange: "text-[#D97706]",
+const STYLES = {
+  blue:   { bar: "bg-accent",        val: "text-accent",       soft: "bg-accent-soft" },
+  green:  { bar: "bg-positive",      val: "text-positive",     soft: "bg-[#16A34A]/8" },
+  purple: { bar: "bg-[#7C3AED]",     val: "text-[#6D28D9]",    soft: "bg-[#7C3AED]/8" },
+  orange: { bar: "bg-[#D97706]",     val: "text-[#D97706]",    soft: "bg-[#D97706]/8" },
 };
 
 export default function KpiCard({ title, value, sub, color = "blue", href }: KpiCardProps) {
+  const s = STYLES[color];
+
   const inner = (
     <>
-      <p className="text-sm text-secondary">{title}</p>
-      <p className={`text-[28px] leading-9 font-bold tnum ${ACCENTS[color]}`}>{value}</p>
-      {sub && <p className="text-xs text-secondary/80 mt-1">{sub}</p>}
+      {/* 상단 컬러 바 */}
+      <div className={`absolute top-0 left-0 right-0 h-0.5 rounded-t-xl ${s.bar}`} />
+
+      <p className="text-xs font-medium text-secondary uppercase tracking-wide">{title}</p>
+      <p className={`text-3xl font-bold tnum mt-1 ${s.val}`}>{value}</p>
+      {sub && <p className="text-xs text-secondary mt-1">{sub}</p>}
+
       {href && (
-        <span className="absolute right-5 bottom-4 text-xs text-accent opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="absolute right-4 bottom-3.5 text-xs text-accent opacity-0 group-hover:opacity-100 transition-opacity">
           자세히 →
         </span>
       )}
     </>
   );
 
-  if (href) {
-    return (
-      <Link
-        href={href}
-        className="group relative rounded-xl border border-edge bg-surface p-6 flex flex-col gap-1 transition-all hover:bg-elevated hover:border-accent/40 hover:-translate-y-0.5"
-      >
-        {inner}
-      </Link>
-    );
-  }
+  const cls = `group relative rounded-xl border border-edge bg-surface p-5 pt-5 flex flex-col gap-0.5 overflow-hidden transition-all hover:shadow-sm hover:-translate-y-0.5`;
 
-  return (
-    <div className="rounded-xl border border-edge bg-surface p-6 flex flex-col gap-1 relative">
-      {inner}
-    </div>
-  );
+  if (href) {
+    return <Link href={href} className={cls}>{inner}</Link>;
+  }
+  return <div className={cls}>{inner}</div>;
 }

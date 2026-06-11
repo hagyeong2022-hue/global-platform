@@ -1,18 +1,18 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
 
-/* 디자인 토큰 — 서울스타트업허브 브랜드 라이트 모드 */
+/* 디자인 토큰 — Supabase 스타일 라이트 모드 */
 @theme {
-  --color-base: #EFF3FA;
+  --color-base: #F8FAFC;
   --color-surface: #FFFFFF;
-  --color-elevated: #E2EAF6;
-  --color-edge: #C6D4EA;
-  --color-primary: #0D1E3A;
-  --color-secondary: #5A6E8C;
+  --color-elevated: #F1F5F9;
+  --color-edge: #E2E8F0;
+  --color-primary: #0F172A;
+  --color-secondary: #64748B;
   --color-accent: #1A56DB;
   --color-accent-hover: #1447C0;
-  --color-accent-soft: rgba(26, 86, 219, 0.1);
-  --color-positive: #0E9E5A;
+  --color-accent-soft: rgba(26, 86, 219, 0.08);
+  --color-positive: #16A34A;
   --color-negative: #DC2626;
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR",
