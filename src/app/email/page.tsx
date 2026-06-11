@@ -9,8 +9,8 @@ export default async function EmailPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">이메일 보내기</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-xl font-semibold text-primary">이메일 보내기</h1>
+        <p className="text-sm text-secondary mt-1">
           연도를 선택하고 전체 주소를 복사해 메일 클라이언트에 붙여넣으세요.
         </p>
       </div>

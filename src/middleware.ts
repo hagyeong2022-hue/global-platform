@@ -7,5 +7,6 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ["/((?!login|api/auth|_next/static|_next/image|favicon.ico).*)"],
+  // keepalive는 Vercel Cron이 비로그인으로 호출하므로 인증 제외
+  matcher: ["/((?!login|api/auth|api/keepalive|_next/static|_next/image|favicon.ico).*)"],
 };

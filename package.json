@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:local": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
     "googleapis": "^171.4.0",
     "next": "16.2.4",
     "next-auth": "^4.24.14",

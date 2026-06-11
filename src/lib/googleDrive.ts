@@ -1,9 +1,10 @@
 import { google, drive_v3 } from "googleapis";
 
-const ROOT_FOLDER_IDS = [
-  "FOLDER_ID_REDACTED",
-  "FOLDER_ID_REDACTED",
-];
+// 환경변수(쉼표 구분)로만 관리 — 공개 레포에 내부 폴더 ID를 두지 않는다
+const ROOT_FOLDER_IDS = (process.env.DRIVE_ROOT_FOLDER_IDS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 const IR_MIME_TYPES = [
   "application/pdf",

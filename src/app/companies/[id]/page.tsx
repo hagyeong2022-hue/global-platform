@@ -1,10 +1,50 @@
 import { getCompanies } from "@/lib/googleSheets";
 import { searchNews } from "@/lib/naverNews";
 import IrPanel from "@/components/IrPanel";
+import CompanyAvatar from "@/components/ui/CompanyAvatar";
+import StageBadge from "@/components/ui/StageBadge";
+import CompanyNewsTabs from "@/components/CompanyNewsTabs";
+import { countryFlag } from "@/lib/countryFlag";
+import { formatMillionsKRW } from "@/lib/format";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const revalidate = 60;
+
+/** 설립일 문자열에서 업력(년) 계산 — 파싱 실패 시 null */
+function calcAge(establishedDate: string): string | null {
+  const m = establishedDate.match(/(\d{4})[.\-/년\s]*(\d{1,2})?/);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = m[2] ? Number(m[2]) - 1 : 0;
+  if (year < 1900 || year > new Date().getFullYear()) return null;
+  const diff = (Date.now() - new Date(year, month, 1).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+  if (diff < 0) return null;
+  return diff.toFixed(1);
+}
+
+/** 기업 개요 문장 자동 생성 — 빈 필드는 자연스럽게 생략 */
+function buildOverview(c: {
+  name: string; establishedDate: string; industry: string;
+  programName: string; year: string; region: string; description: string;
+}): string {
+  const parts: string[] = [];
+  const estYear = c.establishedDate.match(/\d{4}/)?.[0];
+
+  let first = `${c.name}은(는)`;
+  if (estYear) first += ` ${estYear}년에 설립된`;
+  first += c.industry ? ` ${c.industry} 분야 스타트업으로,` : ` 스타트업으로,`;
+  if (c.programName) {
+    first += ` ${c.programName}(${c.year})을 통해`;
+  } else {
+    first += ` SBA 글로벌 프로그램(${c.year})을 통해`;
+  }
+  first += c.region ? ` ${c.region} 진출 지원을 받았습니다.` : ` 해외 진출 지원을 받았습니다.`;
+  parts.push(first);
+
+  if (c.description) parts.push(c.description);
+  return parts.join(" ");
+}
 
 export default async function CompanyDetailPage({
   params,
@@ -26,42 +66,144 @@ export default async function CompanyDetailPage({
     return false;
   });
 
+  // 함께 참여한 기업 — 같은 프로그램 + 같은 년도 (자기 제외, 기업명 중복 제거)
+  const peers = companies
+    .filter(
+      (c) =>
+        c.year === company.year &&
+        c.programName === company.programName &&
+        c.name.trim() !== normName
+    )
+    .filter((c, i, arr) => arr.findIndex((x) => x.name === c.name) === i)
+    .slice(0, 9);
+
+  const age = calcAge(company.establishedDate);
+  const news = await searchNews(company.name, 10).catch(() => []);
+
+  const infoGrid: { label: string; node: React.ReactNode }[] = [
+    { label: "투자단계", node: <StageBadge stage={company.investmentStage} /> },
+    { label: "업력", node: <span className="text-primary font-semibold tnum">{age ? `${age}년` : "—"}</span> },
+    {
+      label: "진출 국가",
+      node: (
+        <span className="text-primary font-semibold">
+          {company.region ? `${countryFlag(company.region)} ${company.region}` : "—"}
+        </span>
+      ),
+    },
+    {
+      label: "참여 프로그램",
+      node: <span className="text-primary font-semibold tnum">{allEntries.length}회</span>,
+    },
+    {
+      label: "매출",
+      node: company.revenue ? (
+        <span className="text-primary font-semibold tnum">{formatMillionsKRW(company.revenue)}원</span>
+      ) : (
+        <span className="text-secondary" title="NICE / DART 연동 예정">—</span>
+      ),
+    },
+    {
+      label: "투자유치",
+      node: company.investmentAmount ? (
+        <span className="text-primary font-semibold tnum">{formatMillionsKRW(company.investmentAmount)}원</span>
+      ) : (
+        <span className="text-secondary">—</span>
+      ),
+    },
+    {
+      label: "고용인원",
+      node: company.employment ? (
+        <span className="text-primary font-semibold tnum">{company.employment}명</span>
+      ) : (
+        <span className="text-secondary">—</span>
+      ),
+    },
+    { label: "대표자", node: <span className="text-primary font-semibold">{company.ceoName || "—"}</span> },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link href="/" className="text-sm text-gray-500 hover:text-blue-600">
-          ← 대시보드로
+        <Link href="/startups" className="text-sm text-secondary hover:text-accent">
+          ← 스타트업 탐색으로
         </Link>
       </div>
 
       {/* 헤더 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="rounded-xl border border-edge bg-surface p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">{company.description}</p>
+          <div className="flex items-center gap-4">
+            <CompanyAvatar name={company.name} size="lg" />
+            <div>
+              <h1 className="text-2xl font-bold text-primary flex items-center gap-3 flex-wrap">
+                {company.name}
+                <StageBadge stage={company.investmentStage} />
+              </h1>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {company.region && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-accent-soft text-accent">
+                    {countryFlag(company.region)} {company.region}
+                  </span>
+                )}
+                {company.industry && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-elevated text-secondary">
+                    {company.industry}
+                  </span>
+                )}
+                {company.isAi && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#A78BFA]/15 text-[#A78BFA]">
+                    AI 분야
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
           <IrPanel companyName={company.name} />
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-            {company.region}
-          </span>
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-            {company.industry}
-          </span>
-          {company.isAi && (
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-              AI 분야
-            </span>
-          )}
+        {/* 기업 개요 문장 */}
+        <p className="mt-5 text-sm leading-6 text-secondary border-t border-edge pt-4">
+          {buildOverview(company)}
+        </p>
+      </div>
+
+      {/* 주요 정보 그리드 */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {infoGrid.map((item) => (
+          <div key={item.label} className="rounded-xl border border-edge bg-surface px-5 py-4">
+            <p className="text-xs text-secondary mb-1.5">{item.label}</p>
+            {item.node}
+          </div>
+        ))}
+      </div>
+
+      {/* 프로그램 이력 */}
+      <div className="rounded-xl border border-edge bg-surface p-6">
+        <h2 className="text-sm font-semibold text-secondary uppercase mb-4">
+          글로벌 진출 프로그램 이력 ({allEntries.length}회)
+        </h2>
+        <div className="flex flex-col gap-2">
+          {allEntries
+            .sort((a, b) => Number(b.year) - Number(a.year))
+            .map((e) => (
+              <div
+                key={e.id}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg border border-edge bg-base/40"
+              >
+                <span className="font-semibold text-accent w-14 tnum">{e.year}</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent-soft text-accent whitespace-nowrap">
+                  {countryFlag(e.region)} {e.region}
+                </span>
+                <span className="text-sm text-secondary truncate">{e.programName}</span>
+              </div>
+            ))}
         </div>
       </div>
 
-      {/* 기본 정보 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">기본 정보</h2>
+      {/* 연락처 */}
+      <div className="rounded-xl border border-edge bg-surface p-6">
+        <h2 className="text-sm font-semibold text-secondary uppercase mb-4">연락처</h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           <InfoRow label="대표자" value={company.ceoName} />
           <InfoRow label="대표자 연락처" value={company.ceoPhone} />
@@ -75,79 +217,33 @@ export default async function CompanyDetailPage({
         </dl>
       </div>
 
-      {/* 프로그램 이력 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">
-          글로벌 진출 프로그램 이력 ({allEntries.length}회)
-        </h2>
-        <div className="flex flex-col gap-2">
-          {allEntries
-            .sort((a, b) => Number(b.year) - Number(a.year))
-            .map((e) => (
-              <div
-                key={e.id}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-100 bg-gray-50"
-              >
-                <span className="font-semibold text-blue-600 w-16">{e.year}</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 w-auto">
-                  {e.region}
-                </span>
-                <span className="text-sm text-gray-600 truncate">{e.programName}</span>
-              </div>
-            ))}
-        </div>
-      </div>
-
-      {/* 매출액 자리 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">재무 정보</h2>
-        <p className="text-sm text-gray-400">
-          NICE / DART API 연동 예정 (6단계) — 매출액 자동 수집
-        </p>
-      </div>
-
       {/* 뉴스 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">최신 뉴스</h2>
-        <CompanyNewsList companyName={company.name} />
+      <div className="rounded-xl border border-edge bg-surface p-6">
+        <h2 className="text-sm font-semibold text-secondary uppercase mb-4">최신 뉴스</h2>
+        <CompanyNewsTabs news={news} />
       </div>
-    </div>
-  );
-}
 
-async function CompanyNewsList({ companyName }: { companyName: string }) {
-  let news = [];
-  try {
-    news = await searchNews(companyName, 5);
-  } catch {
-    return <p className="text-sm text-gray-400">뉴스를 불러오지 못했습니다.</p>;
-  }
-
-  if (news.length === 0) {
-    return <p className="text-sm text-gray-400">관련 뉴스가 없습니다.</p>;
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      {news.map((item, i) => {
-        const date = new Date(item.pubDate).toLocaleDateString("ko-KR", {
-          year: "numeric", month: "short", day: "numeric",
-          hour: "2-digit", minute: "2-digit",
-        });
-        return (
-          <a
-            key={i}
-            href={item.originallink || item.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col gap-1 p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-colors"
-          >
-            <p className="text-sm font-medium text-gray-800 line-clamp-2">{item.title}</p>
-            <p className="text-xs text-gray-400 line-clamp-2">{item.description}</p>
-            <p className="text-xs text-gray-300">{date}</p>
-          </a>
-        );
-      })}
+      {/* 함께 참여한 기업 */}
+      {peers.length > 0 && (
+        <div className="rounded-xl border border-edge bg-surface p-6">
+          <h2 className="text-sm font-semibold text-secondary uppercase mb-4">
+            함께 참여한 기업 — {company.programName} ({company.year})
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {peers.map((p) => (
+              <Link
+                key={p.id}
+                href={`/companies/${encodeURIComponent(p.id)}`}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-edge bg-base/40 hover:bg-elevated hover:border-accent/40 transition-colors"
+              >
+                <CompanyAvatar name={p.name} size="sm" />
+                <span className="text-sm font-medium text-primary truncate flex-1">{p.name}</span>
+                <StageBadge stage={p.investmentStage} />
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -163,8 +259,8 @@ function InfoRow({
 }) {
   return (
     <div className={className}>
-      <dt className="text-xs text-gray-400 mb-1">{label}</dt>
-      <dd className="text-sm text-gray-900">{value || "—"}</dd>
+      <dt className="text-xs text-secondary/70 mb-1">{label}</dt>
+      <dd className="text-sm text-primary">{value || "—"}</dd>
     </div>
   );
 }

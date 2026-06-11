@@ -65,8 +65,8 @@ export default function EmailClient({ companies }: { companies: Company[] }) {
             onClick={() => setSelectedYear(year)}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               selectedYear === year
-                ? "bg-blue-600 text-white"
-                : "bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                ? "bg-accent text-white"
+                : "bg-surface border border-edge text-secondary hover:bg-elevated hover:text-primary"
             }`}
           >
             {year}
@@ -83,8 +83,8 @@ export default function EmailClient({ companies }: { companies: Company[] }) {
               onClick={() => setFilter(f)}
               className={`px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
                 filter === f
-                  ? "bg-gray-800 text-white border-gray-800"
-                  : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                  ? "bg-accent text-white border-accent"
+                  : "bg-base/40 text-secondary border-edge hover:bg-elevated"
               }`}
             >
               {f === "all" ? "전체" : f === "ceo" ? "대표자만" : "담당자만"}
@@ -93,16 +93,16 @@ export default function EmailClient({ companies }: { companies: Company[] }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400">{entries.length}개 이메일</span>
+          <span className="text-sm text-secondary/80">{entries.length}개 이메일</span>
           <button
             onClick={handleCopy}
             disabled={entries.length === 0}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               entries.length === 0
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                ? "bg-elevated text-secondary/80 cursor-not-allowed"
                 : copied
                 ? "bg-green-600 text-white"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-accent text-white hover:bg-accent-hover"
             }`}
           >
             {copied ? "✓ 복사됨" : "전체 주소 복사"}
@@ -111,31 +111,31 @@ export default function EmailClient({ companies }: { companies: Company[] }) {
       </div>
 
       {/* 이메일 미리보기 */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+        <div className="px-4 py-2.5 bg-elevated border-b border-edge text-xs text-secondary">
           {selectedYear}년 수신자 목록 — 아래 주소가 복사됩니다
         </div>
 
         {entries.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">
+          <div className="p-8 text-center text-sm text-secondary/80">
             이 연도에 등록된 이메일 주소가 없습니다.
           </div>
         ) : (
-          <div className="overflow-y-auto max-h-[500px] divide-y divide-gray-100">
+          <div className="overflow-y-auto max-h-[500px] divide-y divide-edge/60">
             {entries.map((e, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50">
+              <div key={i} className="flex items-center gap-4 px-4 py-3 hover:bg-elevated">
                 <div className="w-16 shrink-0">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                     e.role === "대표자"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-600"
+                      ? "bg-accent-soft text-accent"
+                      : "bg-elevated text-secondary"
                   }`}>
                     {e.role}
                   </span>
                 </div>
-                <div className="w-28 shrink-0 text-sm text-gray-700 truncate">{e.companyName}</div>
-                <div className="w-20 shrink-0 text-sm text-gray-500 truncate">{e.name}</div>
-                <div className="text-sm text-blue-600 truncate">{e.email}</div>
+                <div className="w-28 shrink-0 text-sm text-primary truncate">{e.companyName}</div>
+                <div className="w-20 shrink-0 text-sm text-secondary truncate">{e.name}</div>
+                <div className="text-sm text-accent truncate">{e.email}</div>
               </div>
             ))}
           </div>

@@ -1,32 +1,6 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import { authOptions } from "@/lib/auth";
 
-const ALLOWED_EMAILS = [
-  "removed@example.com",
-  "removed@example.com",
-  "removed@example.com",
-  "removed@example.com",
-  "removed@example.com",
-  "removed@example.com",
-  "removed@example.com",
-];
-
-const handler = NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
-  pages: {
-    signIn: "/login",
-  },
-  callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider !== "google") return false;
-      return ALLOWED_EMAILS.includes(user.email ?? "");
-    },
-  },
-});
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

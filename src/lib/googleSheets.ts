@@ -1,7 +1,8 @@
 import { google } from "googleapis";
 
-const SPREADSHEET_ID = "SHEETS_ID_REDACTED";
-const COMPANIES_TAB = "1-3. 참가(선정)기업(2019~)";
+// ID는 환경변수로만 관리 — 공개 레포에 내부 문서 ID를 두지 않는다
+const SPREADSHEET_ID = process.env.SHEETS_SPREADSHEET_ID!;
+const COMPANIES_TAB = process.env.SHEETS_COMPANIES_TAB || "기업목록";
 
 export type Company = {
   id: string;
@@ -21,6 +22,11 @@ export type Company = {
   managerEmail: string;
   managerPhone: string;
   establishedDate: string;
+  revenue: string; // S열: 매출(단위:백만원)
+  investmentAmount: string; // T열: 투자(단위:백만원)
+  employment: string; // U열: 고용(단위:명)
+  investmentStage: string; // V열: 투자단계
+  lastInvestmentDate: string; // W열: 최근투자일
 };
 
 function getAuth() {
@@ -38,7 +44,8 @@ export async function getCompanies(): Promise<Company[]> {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: `'${COMPANIES_TAB}'!A3:R1000`,
+    // V(투자단계)·W(최근투자일)는 값이 없어도 빈값으로 처리됨
+    range: `'${COMPANIES_TAB}'!A3:W1000`,
   });
 
   const rows = res.data.values ?? [];
@@ -63,5 +70,10 @@ export async function getCompanies(): Promise<Company[]> {
       managerEmail: String(row[15] ?? ""),
       managerPhone: String(row[16] ?? ""),
       establishedDate: String(row[17] ?? ""),
+      revenue: String(row[18] ?? "").trim(),
+      investmentAmount: String(row[19] ?? "").trim(),
+      employment: String(row[20] ?? "").trim(),
+      investmentStage: String(row[21] ?? "").trim(),
+      lastInvestmentDate: String(row[22] ?? "").trim(),
     }));
 }

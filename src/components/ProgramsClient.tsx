@@ -74,8 +74,8 @@ export default function ProgramsClient({ companies }: { companies: Company[] }) 
             onClick={() => { setSelectedYear(year); setExpandedRegion(null); }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
               selectedYear === year
-                ? "bg-blue-600 text-white"
-                : "bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                ? "bg-accent text-white"
+                : "bg-surface border border-edge text-secondary hover:bg-elevated hover:text-primary"
             }`}
           >
             {year}
@@ -85,43 +85,43 @@ export default function ProgramsClient({ companies }: { companies: Company[] }) 
 
       {/* KPI 요약 */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-xs text-gray-400 mb-1">지원 기업 수</p>
-          <p className="text-2xl font-bold text-blue-600">{totalCompanies.toLocaleString()}</p>
-          <p className="text-xs text-gray-400 mt-0.5">개 기업</p>
+        <div className="bg-surface rounded-xl border border-edge p-4 text-center">
+          <p className="text-xs text-secondary/80 mb-1">지원 기업 수</p>
+          <p className="text-2xl font-bold text-accent">{totalCompanies.toLocaleString()}</p>
+          <p className="text-xs text-secondary/80 mt-0.5">개 기업</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-xs text-gray-400 mb-1">진출 국가 수</p>
-          <p className="text-2xl font-bold text-indigo-600">{totalRegions}</p>
-          <p className="text-xs text-gray-400 mt-0.5">개국</p>
+        <div className="bg-surface rounded-xl border border-edge p-4 text-center">
+          <p className="text-xs text-secondary/80 mb-1">진출 국가 수</p>
+          <p className="text-2xl font-bold text-accent">{totalRegions}</p>
+          <p className="text-xs text-secondary/80 mt-0.5">개국</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-          <p className="text-xs text-gray-400 mb-1">운영 프로그램</p>
-          <p className="text-2xl font-bold text-purple-600">{totalPrograms}</p>
-          <p className="text-xs text-gray-400 mt-0.5">개 프로그램</p>
+        <div className="bg-surface rounded-xl border border-edge p-4 text-center">
+          <p className="text-xs text-secondary/80 mb-1">운영 프로그램</p>
+          <p className="text-2xl font-bold text-[#A78BFA]">{totalPrograms}</p>
+          <p className="text-xs text-secondary/80 mt-0.5">개 프로그램</p>
         </div>
       </div>
 
       {/* 바 차트 */}
       {chartData.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase mb-4">
+        <div className="bg-surface rounded-xl border border-edge p-6">
+          <h2 className="text-sm font-semibold text-secondary uppercase mb-4">
             {selectedYear}년 국가별 지원 기업 수
           </h2>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 40 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#243049" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 12, fill: "#6b7280" }}
+                tick={{ fontSize: 12, fill: "#94A3B8" }}
                 angle={-35}
                 textAnchor="end"
                 interval={0}
               />
-              <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} allowDecimals={false} />
+              <YAxis tick={{ fontSize: 12, fill: "#94A3B8" }} allowDecimals={false} />
               <Tooltip
                 formatter={(v) => [`${v}개 기업`, "기업 수"]}
-                contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13 }}
+                contentStyle={{ borderRadius: 8, border: "1px solid #243049", background: "#1C2740", color: "#F1F5F9", fontSize: 13 }}
               />
               <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                 {chartData.map((_, i) => (
@@ -134,44 +134,44 @@ export default function ProgramsClient({ companies }: { companies: Company[] }) 
       )}
 
       {/* 국가별 기업 테이블 */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+        <div className="px-6 py-4 border-b border-edge">
+          <h2 className="text-sm font-semibold text-secondary uppercase">
             {selectedYear}년 국가별 기업 목록
           </h2>
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-edge/60">
           {regionGroups.map((g) => (
             <div key={g.region}>
               <button
                 onClick={() => setExpandedRegion(expandedRegion === g.region ? null : g.region)}
-                className="w-full flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-3 hover:bg-elevated transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 min-w-fit">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-soft text-accent min-w-fit">
                     {g.region}
                   </span>
-                  <span className="text-xs text-gray-400 text-left truncate max-w-sm">
+                  <span className="text-xs text-secondary/80 text-left truncate max-w-sm">
                     {g.programs.join(" · ")}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-sm font-semibold text-gray-700">{g.companies.length}개</span>
-                  <span className="text-gray-400 text-xs">{expandedRegion === g.region ? "▲" : "▼"}</span>
+                  <span className="text-sm font-semibold text-primary">{g.companies.length}개</span>
+                  <span className="text-secondary/80 text-xs">{expandedRegion === g.region ? "▲" : "▼"}</span>
                 </div>
               </button>
 
               {expandedRegion === g.region && (
-                <div className="px-6 pb-3 bg-gray-50">
+                <div className="px-6 pb-3 bg-elevated">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2">
                     {g.companies.map((c) => (
                       <Link
                         key={c.id}
                         href={`/companies/${encodeURIComponent(c.id)}`}
-                        className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-white border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-colors"
+                        className="flex flex-col gap-0.5 px-3 py-2 rounded-lg bg-base/40 border border-edge hover:border-accent/40 hover:bg-elevated/60 transition-colors"
                       >
-                        <span className="text-sm font-medium text-blue-600 truncate">{c.name}</span>
-                        <span className="text-xs text-gray-400 truncate">{c.industry || c.description}</span>
+                        <span className="text-sm font-medium text-accent truncate">{c.name}</span>
+                        <span className="text-xs text-secondary/80 truncate">{c.industry || c.description}</span>
                       </Link>
                     ))}
                   </div>
@@ -180,7 +180,7 @@ export default function ProgramsClient({ companies }: { companies: Company[] }) 
             </div>
           ))}
         </div>
-        <div className="px-6 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 text-right">
+        <div className="px-6 py-2 bg-elevated border-t border-edge text-xs text-secondary/80 text-right">
           {selectedYear}년 총 {totalCompanies}개 기업 · {totalRegions}개국
         </div>
       </div>
