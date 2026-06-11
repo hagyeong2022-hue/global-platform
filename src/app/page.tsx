@@ -4,6 +4,7 @@ import NewsFeed from "@/components/NewsFeed";
 import InvestmentHighlights from "@/components/InvestmentHighlights";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
+import { getNewsFromCache } from "@/lib/newsCache";
 import { getRevenueAggregate } from "@/lib/revenueCache";
 import { formatKRW } from "@/lib/format";
 
@@ -17,7 +18,11 @@ export default async function Home() {
   const currentYearRegions = new Set(currentYearCompanies.map((c) => c.region).filter(Boolean));
   const allRegions = new Set(companies.map((c) => c.region).filter(Boolean));
 
-  const news = await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
+  const currentYearNames = new Set(currentYearCompanies.map((c) => c.name));
+  const cachedNews = await getNewsFromCache().catch(() => []);
+  const news = cachedNews.length
+    ? cachedNews.filter((n) => currentYearNames.has(n.companyName))
+    : await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
   const rev = await getRevenueAggregate().catch(() => ({ totalKRW: 0, companies: 0 }));
 
   // 이달의 뉴스 건수

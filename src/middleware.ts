@@ -16,5 +16,5 @@ export default e2eBypass
 
 export const config = {
   // keepalive·backup은 Vercel Cron이 비로그인으로 호출하므로 인증 제외
-  matcher: ["/((?!login|api/auth|api/keepalive|api/backup|api/revenue/refresh|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!login|api/auth|api/keepalive|api/backup|api/revenue/refresh|api/news/collect|_next/static|_next/image|favicon.ico).*)"],
 };

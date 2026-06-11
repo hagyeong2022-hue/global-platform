@@ -78,6 +78,62 @@ function MultiSelect({
   );
 }
 
+// ─── 단일선택 드롭다운 (수신자 역할 필터) ───────────────────
+function SingleSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+  const current = options.find((o) => o.value === value) ?? options[0];
+  const active = value !== options[0].value;
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap ${
+          active
+            ? "bg-accent-soft text-accent border-accent/40"
+            : "border-edge text-secondary hover:text-primary hover:bg-elevated"
+        }`}
+      >
+        {label}: {current.label}
+        <span className="ml-1 text-xs opacity-60">▾</span>
+      </button>
+      {open && (
+        <div className="absolute z-30 mt-2 w-40 rounded-xl border border-edge bg-elevated shadow-xl p-2">
+          {options.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-sm text-left hover:bg-surface ${
+                value === o.value ? "text-accent" : "text-primary"
+              }`}
+            >
+              {o.label}
+              {value === o.value && <span className="text-xs">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EmailClient({ companies }: { companies: Company[] }) {
   const years = useMemo(() => {
     const set = new Set(companies.map((c) => c.year).filter(Boolean));
@@ -198,6 +254,16 @@ export default function EmailClient({ companies }: { companies: Company[] }) {
       <div className="flex flex-wrap gap-2 items-center">
         <MultiSelect label="참가 프로그램" options={programOptions} selected={programs} onChange={setPrograms} />
         <MultiSelect label="산업분야" options={industryOptions} selected={industries} onChange={setIndustries} />
+        <SingleSelect
+          label="수신자"
+          value={filter}
+          options={[
+            { value: "all", label: "전체" },
+            { value: "ceo", label: "대표자만" },
+            { value: "manager", label: "담당자만" },
+          ]}
+          onChange={(v) => setFilter(v as "all" | "ceo" | "manager")}
+        />
         {activeChips.length > 0 && (
           <button
             onClick={() => { setPrograms([]); setIndustries([]); }}
@@ -233,24 +299,8 @@ export default function EmailClient({ companies }: { companies: Company[] }) {
         </div>
       )}
 
-      {/* 수신자 역할 필터 + 보내기/복사 */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex gap-2">
-          {(["all", "ceo", "manager"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
-                filter === f
-                  ? "bg-accent text-white border-accent"
-                  : "bg-base/40 text-secondary border-edge hover:bg-elevated"
-              }`}
-            >
-              {f === "all" ? "전체" : f === "ceo" ? "대표자만" : "담당자만"}
-            </button>
-          ))}
-        </div>
-
+      {/* 보내기/복사 */}
+      <div className="flex items-center justify-end gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <span className="text-sm text-secondary/80 tnum">{entries.length}개 수신자</span>
           <button

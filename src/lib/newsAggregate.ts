@@ -24,7 +24,7 @@ const SCORE_RULES: { keywords: string[]; score: number }[] = [
   { keywords: ["출시", "런칭", "론칭", "오픈"], score: 1 },
 ];
 
-function calcScore(item: NewsItem): number {
+export function calcScore(item: NewsItem): number {
   const text = item.title + " " + item.description;
   return SCORE_RULES.reduce((total, rule) => {
     const hit = rule.keywords.some((kw) => text.includes(kw));

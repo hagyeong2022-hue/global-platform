@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
+import { getNewsFromCache } from "@/lib/newsCache";
 import NewsArchive from "@/components/NewsArchive";
 
 export const revalidate = 300;
@@ -15,7 +16,8 @@ export default async function NewsPage() {
   const targets = companies.filter((c) => years.includes(c.year));
   // 같은 기업 중복 행 제거 후 수집
   const unique = targets.filter((c, i, arr) => arr.findIndex((x) => x.name === c.name) === i);
-  const news = await fetchCompaniesNews(unique, 5).catch(() => []);
+  const cached = await getNewsFromCache().catch(() => []);
+  const news = cached.length ? cached : await fetchCompaniesNews(unique, 5).catch(() => []);
 
   return (
     <div className="flex flex-col gap-6">
