@@ -133,7 +133,7 @@ function downloadCsv(companies: Company[], visibleCols: ColumnKey[]) {
 }
 
 // ─── 메인 컴포넌트 ──────────────────────────────────────────
-export default function StartupExplorer({ companies }: { companies: Company[] }) {
+export default function StartupExplorer({ companies, logoMap = {} }: { companies: Company[]; logoMap?: Record<string, string> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -425,7 +425,7 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
                     {visibleCols.includes("name") && (
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="flex items-center gap-2.5">
-                          <CompanyAvatar name={c.name} size="sm" />
+                          <CompanyAvatar name={c.name} logoUrl={logoMap[c.name]} size="sm" />
                           <Link
                             href={`/companies/${encodeURIComponent(c.id)}`}
                             onClick={(e) => e.stopPropagation()}

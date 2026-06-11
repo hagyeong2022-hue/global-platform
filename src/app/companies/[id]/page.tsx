@@ -8,6 +8,7 @@ import CompanyNewsTabs from "@/components/CompanyNewsTabs";
 import { countryFlag } from "@/lib/countryFlag";
 import { formatKRW } from "@/lib/format";
 import { resolveRevenue, resolveInvestment, SOURCE_LABEL, SOURCE_COLOR } from "@/lib/companyMetrics";
+import { getLogoMap } from "@/lib/logos";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -80,10 +81,11 @@ export default async function CompanyDetailPage({
     .slice(0, 9);
 
   const age = calcAge(company.establishedDate);
-  const [news, revenue, investment] = await Promise.all([
+  const [news, revenue, investment, logoMap] = await Promise.all([
     searchNews(company.name, 10).catch(() => []),
     resolveRevenue(company).catch(() => null),
     resolveInvestment(company).catch(() => null),
+    getLogoMap().catch((): Record<string, string> => ({})),
   ]);
 
   const infoGrid: { label: string; node: React.ReactNode }[] = [
@@ -152,7 +154,7 @@ export default async function CompanyDetailPage({
       <div className="rounded-xl border border-edge bg-surface p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <CompanyAvatar name={company.name} size="lg" />
+            <CompanyAvatar name={company.name} logoUrl={logoMap[company.name]} size="lg" />
             <div>
               <h1 className="text-2xl font-bold text-primary flex items-center gap-3 flex-wrap">
                 {company.name}

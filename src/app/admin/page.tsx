@@ -27,12 +27,10 @@ export default async function AdminPage() {
             고용·투자단계·최근투자일을 수정하면 구글 시트에 즉시 반영됩니다. 매출은 DART, 투자는 혁신의숲에서 자동 수집됩니다.
           </p>
         </div>
-        <Link
-          href="/admin/settings"
-          className="shrink-0 px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors"
-        >
-          ⚙ 연동 설정
-        </Link>
+        <div className="flex gap-2 shrink-0">
+          <Link href="/admin/logos" className="px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors">🖼 로고</Link>
+          <Link href="/admin/settings" className="px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors">⚙ 연동 설정</Link>
+        </div>
       </div>
       <AdminClient companies={companies} />
     </div>
