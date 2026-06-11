@@ -45,8 +45,24 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
-    // 한 번 로그인하면 30일간 유지 (브라우저 종료·재부팅 무관, 영구 쿠키)
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 토큰 유효 상한 (실제 만료는 아래 세션 쿠키가 결정)
+  },
+  // 세션 쿠키(만료시각 없음) → 브라우저 종료·재부팅 시 삭제되어 재로그인 필요.
+  // 켜져 있는 동안에는 계속 로그인 유지.
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        // maxAge·expires 미설정 = 세션 쿠키 (재부팅 시 만료)
+      },
+    },
   },
   callbacks: {
     async signIn({ user, account }) {
