@@ -3,6 +3,7 @@ import { searchNews } from "@/lib/naverNews";
 import IrPanel from "@/components/IrPanel";
 import BookmarkStar from "@/components/BookmarkStar";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
+import { emailDomain } from "@/lib/companyLogo";
 import StageBadge from "@/components/ui/StageBadge";
 import CompanyNewsTabs from "@/components/CompanyNewsTabs";
 import { countryFlag } from "@/lib/countryFlag";
@@ -154,7 +155,7 @@ export default async function CompanyDetailPage({
       <div className="rounded-xl border border-edge bg-surface p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
-            <CompanyAvatar name={company.name} logoUrl={logoMap[company.name]} size="lg" />
+            <CompanyAvatar name={company.name} logoUrl={logoMap[company.name]} domain={emailDomain(company)} size="lg" />
             <div>
               <h1 className="text-2xl font-bold text-primary flex items-center gap-3 flex-wrap">
                 {company.name}
@@ -259,7 +260,7 @@ export default async function CompanyDetailPage({
                 href={`/companies/${encodeURIComponent(p.id)}`}
                 className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-edge bg-base/40 hover:bg-elevated hover:border-accent/40 transition-colors"
               >
-                <CompanyAvatar name={p.name} size="sm" />
+                <CompanyAvatar name={p.name} domain={emailDomain(p)} size="sm" />
                 <span className="text-sm font-medium text-primary truncate flex-1">{p.name}</span>
                 <StageBadge stage={p.investmentStage} />
               </Link>

@@ -28,6 +28,7 @@ export default async function AdminPage() {
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
+          <Link href="/admin/users" className="px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors">👤 계정 관리</Link>
           <Link href="/admin/logos" className="px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors">🖼 로고</Link>
           <Link href="/admin/settings" className="px-4 py-2 rounded-lg border border-edge text-sm text-secondary hover:bg-elevated hover:text-primary transition-colors">⚙ 연동 설정</Link>
         </div>

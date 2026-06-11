@@ -7,16 +7,17 @@ import type { Company } from "@/lib/googleSheets";
 import StageBadge from "@/components/ui/StageBadge";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import { countryFlag } from "@/lib/countryFlag";
+import { emailDomain } from "@/lib/companyLogo";
 
 // ─── 필터 축 정의 ───────────────────────────────────────────
 type FilterKey = "year" | "industry" | "country" | "program" | "stage";
 
 const FILTER_DEFS: { key: FilterKey; label: string; getValue: (c: Company) => string }[] = [
   { key: "year", label: "지원 년도", getValue: (c) => c.year },
+  { key: "stage", label: "투자단계", getValue: (c) => c.investmentStage },
   { key: "industry", label: "분야", getValue: (c) => c.industry },
   { key: "country", label: "진출 국가", getValue: (c) => c.region },
   { key: "program", label: "프로그램", getValue: (c) => c.programName },
-  { key: "stage", label: "투자단계", getValue: (c) => c.investmentStage },
 ];
 
 // ─── 테이블 컬럼 정의 ────────────────────────────────────────
@@ -28,17 +29,17 @@ type ColumnKey =
 // 컬럼 순서 = 필터 드롭다운 순서와 정렬 (분야 → 진출 국가 → 프로그램 → 투자단계)
 const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => string }[] = [
   { key: "name", label: "기업명", sortValue: (c) => c.name },
+  { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage },
   { key: "industry", label: "분야", sortValue: (c) => c.industry },
   { key: "description", label: "아이템", sortValue: (c) => c.description },
   { key: "ceoName", label: "대표자", sortValue: (c) => c.ceoName },
   { key: "country", label: "진출 국가", sortValue: (c) => c.region },
   { key: "program", label: "프로그램", sortValue: (c) => c.programName },
-  { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage },
   { key: "establishedDate", label: "설립일", sortValue: (c) => c.establishedDate },
   { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0") },
 ];
 
-const DEFAULT_VISIBLE: ColumnKey[] = ["name", "industry", "description", "ceoName", "country", "program", "stage"];
+const DEFAULT_VISIBLE: ColumnKey[] = ["name", "stage", "industry", "description", "ceoName", "country", "program"];
 
 // ─── 멀티셀렉트 드롭다운 ─────────────────────────────────────
 function MultiSelect({
@@ -425,7 +426,7 @@ export default function StartupExplorer({ companies, logoMap = {} }: { companies
                     {visibleCols.includes("name") && (
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="flex items-center gap-2.5">
-                          <CompanyAvatar name={c.name} logoUrl={logoMap[c.name]} size="sm" />
+                          <CompanyAvatar name={c.name} logoUrl={logoMap[c.name]} domain={emailDomain(c)} size="sm" />
                           <Link
                             href={`/companies/${encodeURIComponent(c.id)}`}
                             onClick={(e) => e.stopPropagation()}
@@ -434,6 +435,11 @@ export default function StartupExplorer({ companies, logoMap = {} }: { companies
                             {c.name}
                           </Link>
                         </span>
+                      </td>
+                    )}
+                    {visibleCols.includes("stage") && (
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <StageBadge stage={c.investmentStage} />
                       </td>
                     )}
                     {visibleCols.includes("industry") && (
@@ -455,11 +461,6 @@ export default function StartupExplorer({ companies, logoMap = {} }: { companies
                     {visibleCols.includes("program") && (
                       <td className="px-4 py-3 text-secondary max-w-xs truncate" title={c.programName}>
                         {c.programName || "—"}
-                      </td>
-                    )}
-                    {visibleCols.includes("stage") && (
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <StageBadge stage={c.investmentStage} />
                       </td>
                     )}
                     {visibleCols.includes("establishedDate") && (

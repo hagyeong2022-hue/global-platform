@@ -10,14 +10,16 @@ function getAllowedEmails(): string[] {
     .filter(Boolean);
 }
 
-// 역할 조회 캐시 (이메일 → role), 로그인 시 1회 + 5분 TTL
-const roleCache = new Map<string, { role: string; at: number }>();
-const ROLE_TTL = 5 * 60 * 1000;
+// 사용자 레코드 캐시 (이메일 → {allowed, role}), 5분 TTL
+type UserRec = { allowed: boolean; role: string };
+const userCache = new Map<string, { rec: UserRec; at: number }>();
+const USER_TTL = 5 * 60 * 1000;
 
-async function getUserRole(email: string): Promise<string> {
+async function getUserRecord(email: string): Promise<UserRec> {
   const key = email.toLowerCase();
-  const cached = roleCache.get(key);
-  if (cached && Date.now() - cached.at < ROLE_TTL) return cached.role;
+  const cached = userCache.get(key);
+  if (cached && Date.now() - cached.at < USER_TTL) return cached.rec;
+  let rec: UserRec = { allowed: false, role: "member" };
   try {
     const supabase = getSupabaseAdmin();
     const { data } = await supabase
@@ -25,12 +27,12 @@ async function getUserRole(email: string): Promise<string> {
       .select("role")
       .eq("email", key)
       .maybeSingle();
-    const role = data?.role ?? "member";
-    roleCache.set(key, { role, at: Date.now() });
-    return role;
+    if (data) rec = { allowed: true, role: data.role ?? "member" };
   } catch {
-    return "member";
+    // DB 장애 시 아래 env fallback
   }
+  userCache.set(key, { rec, at: Date.now() });
+  return rec;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -67,16 +69,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider !== "google") return false;
-      const allowed = getAllowedEmails();
-      if (allowed.length === 0) {
-        console.error("ALLOWED_EMAILS 환경변수가 비어 있음 — 모든 로그인 거부");
-        return false;
-      }
-      return allowed.includes((user.email ?? "").toLowerCase());
+      const email = (user.email ?? "").toLowerCase();
+      if (!email) return false;
+      const rec = await getUserRecord(email);
+      // allowed_users DB 우선, DB에 없으면 env ALLOWED_EMAILS fallback (이전 호환)
+      return rec.allowed || getAllowedEmails().includes(email);
     },
     async jwt({ token, user }) {
-      // 로그인 시점에만 역할 조회 → 토큰에 저장
-      if (user?.email) token.role = await getUserRole(user.email);
+      if (user?.email) token.role = (await getUserRecord(user.email)).role;
       return token;
     },
     async session({ session, token }) {

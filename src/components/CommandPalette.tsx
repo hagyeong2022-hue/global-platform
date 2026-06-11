@@ -3,11 +3,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
+import { emailDomain } from "@/lib/companyLogo";
 import StageBadge from "@/components/ui/StageBadge";
 
 type C = {
   id: string; name: string; industry: string; region: string;
   ceoName: string; description: string; investmentStage: string;
+  ceoEmail: string; managerEmail: string;
 };
 
 export default function CommandPalette() {
@@ -94,7 +96,7 @@ export default function CommandPalette() {
               onMouseEnter={() => setActive(i)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${i === active ? "bg-elevated" : ""}`}
             >
-              <CompanyAvatar name={c.name} size="sm" />
+              <CompanyAvatar name={c.name} domain={emailDomain(c)} size="sm" />
               <span className="flex-1 min-w-0">
                 <span className="block text-sm font-medium text-primary truncate">{c.name}</span>
                 <span className="block text-xs text-secondary truncate">{[c.industry, c.region].filter(Boolean).join(" · ")}</span>
