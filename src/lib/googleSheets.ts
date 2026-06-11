@@ -26,18 +26,16 @@ export type Company = {
   revenue: string; // S열: 매출
   investmentAmount: string; // T열: 투자
   employment: string; // U열: 고용
-  investmentStage: string; // V열: 투자단계
-  lastInvestmentDate: string; // W열: 최근투자일
+  investmentStage: string; // AE열: 투자단계(자동수집)
+  lastInvestmentDate: string; // AF열: 최근투자일(자동수집)
 };
 
 // 대시보드에서 편집(시트로 되쓰기) 허용하는 성장지표 컬럼만 정의
 // — 기업 식별정보(이름·사업자번호 등)는 시트에서만 수정 (행 정합성 보호)
 export const EDITABLE_COLUMNS = {
-  revenue: "S",
-  investmentAmount: "T",
   employment: "U",
-  investmentStage: "V",
-  lastInvestmentDate: "W",
+  investmentStage: "AE",
+  lastInvestmentDate: "AF",
 } as const;
 export type EditableField = keyof typeof EDITABLE_COLUMNS;
 
@@ -60,7 +58,7 @@ export async function getCompanies(): Promise<Company[]> {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: `'${COMPANIES_TAB}'!A3:W1000`,
+    range: `'${COMPANIES_TAB}'!A3:AF1000`,
   });
 
   const rows = res.data.values ?? [];
@@ -90,8 +88,8 @@ export async function getCompanies(): Promise<Company[]> {
       revenue: String(row[18] ?? "").trim(),
       investmentAmount: String(row[19] ?? "").trim(),
       employment: String(row[20] ?? "").trim(),
-      investmentStage: String(row[21] ?? "").trim(),
-      lastInvestmentDate: String(row[22] ?? "").trim(),
+      investmentStage: String(row[30] ?? "").trim(), // AE열
+      lastInvestmentDate: String(row[31] ?? "").trim(), // AF열
     }));
 }
 

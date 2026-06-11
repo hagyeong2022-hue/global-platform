@@ -27,3 +27,8 @@ export function formatKRW(raw: string | number | undefined | null): string {
 export function sumWon(values: (string | number | undefined | null)[]): number {
   return values.reduce<number>((acc, v) => acc + parseWon(v), 0);
 }
+
+/** 시트의 '백만원' 단위 값 → 원. (헤더 기준; 단 입력 불일치 행은 부정확할 수 있음) */
+export function millionWonToWon(raw: string | number | undefined | null): number {
+  return parseWon(raw) * 1_000_000;
+}

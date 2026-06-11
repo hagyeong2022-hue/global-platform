@@ -6,7 +6,7 @@ import StageBadge from "@/components/ui/StageBadge";
 import CompanyNewsTabs from "@/components/CompanyNewsTabs";
 import { countryFlag } from "@/lib/countryFlag";
 import { formatKRW } from "@/lib/format";
-import { resolveRevenue, SOURCE_LABEL, SOURCE_COLOR } from "@/lib/companyMetrics";
+import { resolveRevenue, resolveInvestment, SOURCE_LABEL, SOURCE_COLOR } from "@/lib/companyMetrics";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -79,9 +79,10 @@ export default async function CompanyDetailPage({
     .slice(0, 9);
 
   const age = calcAge(company.establishedDate);
-  const [news, revenue] = await Promise.all([
+  const [news, revenue, investment] = await Promise.all([
     searchNews(company.name, 10).catch(() => []),
     resolveRevenue(company).catch(() => null),
+    resolveInvestment(company).catch(() => null),
   ]);
 
   const infoGrid: { label: string; node: React.ReactNode }[] = [
@@ -118,10 +119,13 @@ export default async function CompanyDetailPage({
     },
     {
       label: "투자유치",
-      node: formatKRW(company.investmentAmount) ? (
-        <span className="text-primary font-semibold tnum">{formatKRW(company.investmentAmount)}원</span>
+      node: investment ? (
+        <span className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-primary font-semibold tnum">{formatKRW(investment.amountKRW)}원</span>
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${SOURCE_COLOR[investment.source]}26`, color: SOURCE_COLOR[investment.source] }}>{SOURCE_LABEL[investment.source]}</span>
+        </span>
       ) : (
-        <span className="text-secondary">—</span>
+        <span className="text-secondary" title="혁신의숲 연동 시 표시">—</span>
       ),
     },
     {

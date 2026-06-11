@@ -1,39 +1,29 @@
 import type { Company } from "@/lib/googleSheets";
-import { parseWon } from "@/lib/format";
-import { getDartRevenue } from "@/lib/dart";
+import { getCachedRevenue } from "@/lib/revenueCache";
 import { fetchInnoforestCompany } from "@/lib/innoforest";
 
-// 데이터 소스 우선순위: 수동(시트/관리자) > 혁신의숲 > DART(기본). 중복 없이 한 값만 채택 + 출처 표시.
-export type MetricSource = "manual" | "innoforest" | "dart";
-export type RevenueResult = { amountKRW: number; source: MetricSource; fiscalYear?: number } | null;
+// 데이터 정책 (사용자 확정):
+//  - 매출 = DART (공식 재무제표)만 사용. 시트 S열 무시.
+//  - 투자 = 혁신의숲만 사용. 시트 T열 무시. (키 연결 전에는 null)
+export type MetricSource = "dart" | "innoforest";
+export type MetricResult = { amountKRW: number; source: MetricSource; fiscalYear?: number } | null;
 
-export const SOURCE_LABEL: Record<MetricSource, string> = {
-  manual: "수동 입력",
-  innoforest: "혁신의숲",
-  dart: "DART",
-};
-export const SOURCE_COLOR: Record<MetricSource, string> = {
-  manual: "#94A3B8",
-  innoforest: "#34D399",
-  dart: "#3B82F6",
-};
+export const SOURCE_LABEL: Record<MetricSource, string> = { dart: "DART", innoforest: "혁신의숲" };
+export const SOURCE_COLOR: Record<MetricSource, string> = { dart: "#3B82F6", innoforest: "#34D399" };
 
-export async function resolveRevenue(company: Company): Promise<RevenueResult> {
-  // 1) 수동(시트) 값 최우선
-  const manual = parseWon(company.revenue);
-  if (manual > 0) return { amountKRW: manual, source: "manual" };
+/** 매출 — DART 캐시(revenue_cache)에서 빠르게 읽음. 미수집 시 null */
+export async function resolveRevenue(company: Company): Promise<MetricResult> {
+  const cached = await getCachedRevenue(company);
+  if (cached) return { amountKRW: cached.revenueKRW, source: "dart", fiscalYear: cached.fiscalYear };
+  return null;
+}
 
-  // 2) 혁신의숲 (연결 시에만 — 미설정이면 즉시 null)
+/** 투자 — 혁신의숲만. 키 연결 전에는 null */
+export async function resolveInvestment(company: Company): Promise<MetricResult> {
   const inno = await fetchInnoforestCompany(company.businessNumber).catch(() => null);
-  if (inno?.revenue?.length) {
-    const latest = [...inno.revenue].sort((a, b) => b.year - a.year)[0];
-    if (latest && latest.amountKRW > 0)
-      return { amountKRW: latest.amountKRW, source: "innoforest", fiscalYear: latest.year };
+  if (inno?.investments?.length) {
+    const total = inno.investments.reduce((a, i) => a + (i.amountKRW ?? 0), 0);
+    if (total > 0) return { amountKRW: total, source: "innoforest" };
   }
-
-  // 3) DART (기본 자동수집 — 키 없으면 즉시 null)
-  const dart = await getDartRevenue(company.name).catch(() => null);
-  if (dart) return { amountKRW: dart.revenueKRW, source: "dart", fiscalYear: dart.fiscalYear };
-
   return null;
 }

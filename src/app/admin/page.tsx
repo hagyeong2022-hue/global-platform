@@ -24,8 +24,7 @@ export default async function AdminPage() {
         <div>
           <h1 className="text-xl font-semibold text-primary">관리자 — 데이터 편집</h1>
           <p className="text-sm text-secondary mt-1">
-            성장지표(매출·투자유치·고용·투자단계·최근투자일)를 수정하면 구글 시트에 즉시 반영됩니다.
-            기업명·사업자번호 등 식별정보는 시트에서만 수정하세요.
+            고용·투자단계·최근투자일을 수정하면 구글 시트에 즉시 반영됩니다. 매출은 DART, 투자는 혁신의숲에서 자동 수집됩니다.
           </p>
         </div>
         <Link

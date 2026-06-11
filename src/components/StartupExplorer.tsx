@@ -7,7 +7,6 @@ import type { Company } from "@/lib/googleSheets";
 import StageBadge from "@/components/ui/StageBadge";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import { countryFlag } from "@/lib/countryFlag";
-import { formatKRW, parseWon } from "@/lib/format";
 
 // ─── 필터 축 정의 ───────────────────────────────────────────
 type FilterKey = "year" | "industry" | "country" | "program" | "stage";
@@ -24,22 +23,22 @@ const FILTER_DEFS: { key: FilterKey; label: string; getValue: (c: Company) => st
 type ColumnKey =
   | "name" | "industry" | "description" | "ceoName"
   | "stage" | "country" | "program" | "establishedDate"
-  | "revenue" | "employment";
+  | "employment";
 
+// 컬럼 순서 = 필터 드롭다운 순서와 정렬 (분야 → 진출 국가 → 프로그램 → 투자단계)
 const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => string }[] = [
   { key: "name", label: "기업명", sortValue: (c) => c.name },
   { key: "industry", label: "분야", sortValue: (c) => c.industry },
   { key: "description", label: "아이템", sortValue: (c) => c.description },
   { key: "ceoName", label: "대표자", sortValue: (c) => c.ceoName },
-  { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage },
   { key: "country", label: "진출 국가", sortValue: (c) => c.region },
   { key: "program", label: "프로그램", sortValue: (c) => c.programName },
+  { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage },
   { key: "establishedDate", label: "설립일", sortValue: (c) => c.establishedDate },
-  { key: "revenue", label: "매출", sortValue: (c) => String(parseWon(c.revenue)).padStart(15, "0") },
   { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0") },
 ];
 
-const DEFAULT_VISIBLE: ColumnKey[] = ["name", "industry", "description", "ceoName", "stage", "country", "program"];
+const DEFAULT_VISIBLE: ColumnKey[] = ["name", "industry", "description", "ceoName", "country", "program", "stage"];
 
 // ─── 멀티셀렉트 드롭다운 ─────────────────────────────────────
 function MultiSelect({
@@ -448,11 +447,6 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
                     {visibleCols.includes("ceoName") && (
                       <td className="px-4 py-3 whitespace-nowrap text-secondary">{c.ceoName || "—"}</td>
                     )}
-                    {visibleCols.includes("stage") && (
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <StageBadge stage={c.investmentStage} />
-                      </td>
-                    )}
                     {visibleCols.includes("country") && (
                       <td className="px-4 py-3 whitespace-nowrap text-primary">
                         {c.region ? `${countryFlag(c.region)} ${c.region}` : "—"}
@@ -463,11 +457,13 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
                         {c.programName || "—"}
                       </td>
                     )}
+                    {visibleCols.includes("stage") && (
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <StageBadge stage={c.investmentStage} />
+                      </td>
+                    )}
                     {visibleCols.includes("establishedDate") && (
                       <td className="px-4 py-3 whitespace-nowrap text-secondary tnum">{c.establishedDate || "—"}</td>
-                    )}
-                    {visibleCols.includes("revenue") && (
-                      <td className="px-4 py-3 whitespace-nowrap text-secondary tnum text-right">{formatKRW(c.revenue) ? `${formatKRW(c.revenue)}원` : "—"}</td>
                     )}
                     {visibleCols.includes("employment") && (
                       <td className="px-4 py-3 whitespace-nowrap text-secondary tnum text-right">{c.employment || "—"}</td>

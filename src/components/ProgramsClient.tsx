@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Company } from "@/lib/googleSheets";
 import Link from "next/link";
 import {
@@ -31,7 +32,11 @@ export default function ProgramsClient({ companies }: { companies: Company[] }) 
     return Array.from(set).sort((a, b) => Number(b) - Number(a));
   }, [companies]);
 
-  const [selectedYear, setSelectedYear] = useState<string>(years[0] ?? "");
+  const searchParams = useSearchParams();
+  const yearParam = searchParams.get("year");
+  const [selectedYear, setSelectedYear] = useState<string>(
+    yearParam && years.includes(yearParam) ? yearParam : years[0] ?? ""
+  );
   const [expandedRegion, setExpandedRegion] = useState<string | null>(null);
 
   const yearData = useMemo(

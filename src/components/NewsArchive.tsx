@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { CompanyNewsItem } from "@/lib/newsAggregate";
 import { toDateKey } from "@/lib/newsAggregate";
 import { NEWS_CATEGORIES, CATEGORY_COLORS, NewsCategory } from "@/lib/newsCategory";
-import { hashColor } from "@/lib/hashColor";
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -64,8 +63,9 @@ export default function NewsArchive({ news }: { news: CompanyNewsItem[] }) {
       date.setDate(weekStart.getDate() + i);
       const key = toDateKey(date);
       const dayNews = news.filter((n) => toDateKey(new Date(n.item.pubDate)) === key);
-      const companies = Array.from(new Set(dayNews.map((n) => n.companyName))).slice(0, 4);
-      return { date, key, count: dayNews.length, companies };
+      // 그날 등장한 뉴스 카테고리(투자/글로벌/수상/기타) — 정의된 순서 유지
+      const cats = NEWS_CATEGORIES.filter((cat) => dayNews.some((n) => n.category === cat));
+      return { date, key, count: dayNews.length, cats };
     });
   }, [news, weekStart]);
 
@@ -122,6 +122,7 @@ export default function NewsArchive({ news }: { news: CompanyNewsItem[] }) {
           {days.map((d, i) => {
             const isToday = d.key === todayKey;
             const isSelected = d.key === dateParam;
+            const isWeekend = i >= 5;
             return (
               <button
                 key={d.key}
@@ -131,40 +132,70 @@ export default function NewsArchive({ news }: { news: CompanyNewsItem[] }) {
                     else p.set("date", d.key);
                   })
                 }
-                className={`rounded-xl border p-3 flex flex-col gap-1.5 min-h-[88px] text-left transition-all ${
+                className={`rounded-xl border overflow-hidden min-h-[104px] text-left transition-all ${
                   isSelected
-                    ? "border-accent bg-accent-soft"
+                    ? "border-accent ring-1 ring-accent bg-accent-soft"
                     : isToday
                     ? "border-accent/50 bg-surface"
                     : "border-edge bg-surface hover:bg-elevated"
                 }`}
               >
-                <div className="flex items-baseline justify-between">
-                  <span className={`text-xs font-medium ${isSelected || isToday ? "text-accent" : "text-secondary"}`}>
+                {/* 상단: 요일 + 날짜 (구분된 헤더 바) */}
+                <div className={`flex items-baseline justify-between px-2.5 py-1.5 border-b ${
+                  isSelected ? "border-accent/40" : "border-edge/70"
+                }`}>
+                  <span className={`text-[11px] font-medium ${
+                    isSelected || isToday ? "text-accent" : isWeekend ? "text-secondary/60" : "text-secondary"
+                  }`}>
                     {DAY_LABELS[i]}
                   </span>
-                  <span className={`text-sm font-semibold tnum ${isSelected ? "text-accent" : "text-primary"}`}>
-                    {d.date.getDate()}
+                  <span className="flex items-baseline gap-0.5">
+                    <span className={`text-base font-semibold tnum ${
+                      isSelected || isToday ? "text-accent" : "text-primary"
+                    }`}>
+                      {d.date.getDate()}
+                    </span>
+                    <span className="text-[10px] text-secondary/70">일</span>
                   </span>
                 </div>
-                <span className={`text-lg font-bold tnum ${d.count > 0 ? "text-primary" : "text-secondary/40"}`}>
-                  {d.count > 0 ? d.count : "·"}
-                </span>
-                {d.companies.length > 0 && (
-                  <span className="flex gap-1 mt-auto">
-                    {d.companies.map((name) => (
-                      <span
-                        key={name}
-                        title={name}
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: hashColor(name) }}
-                      />
-                    ))}
-                  </span>
-                )}
+
+                {/* 하단: 뉴스 건수 + 카테고리 점 */}
+                <div className="px-2.5 py-2 flex flex-col gap-1.5">
+                  {d.count > 0 ? (
+                    <span className="flex items-baseline gap-0.5">
+                      <span className="text-xl font-bold tnum text-primary leading-none">{d.count}</span>
+                      <span className="text-[11px] font-medium text-secondary">건</span>
+                    </span>
+                  ) : (
+                    <span className="text-xs text-secondary/40">뉴스 없음</span>
+                  )}
+                  {d.cats.length > 0 && (
+                    <span className="flex gap-1">
+                      {d.cats.map((cat) => (
+                        <span
+                          key={cat}
+                          title={cat}
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: CATEGORY_COLORS[cat] }}
+                        />
+                      ))}
+                    </span>
+                  )}
+                </div>
               </button>
             );
           })}
+        </div>
+
+        {/* 카테고리 색상 범례 */}
+        <div className="flex items-center gap-3 flex-wrap text-[11px] text-secondary px-1">
+          <span className="opacity-70">색상:</span>
+          {NEWS_CATEGORIES.map((cat) => (
+            <span key={cat} className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat] }} />
+              {cat}
+            </span>
+          ))}
         </div>
       </div>
 

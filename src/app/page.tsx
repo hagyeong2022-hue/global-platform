@@ -1,11 +1,11 @@
 import Link from "next/link";
 import KpiCard from "@/components/KpiCard";
 import NewsFeed from "@/components/NewsFeed";
-import NewsCalendar from "@/components/NewsCalendar";
 import InvestmentHighlights from "@/components/InvestmentHighlights";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
-import { formatKRW, sumWon } from "@/lib/format";
+import { getRevenueAggregate } from "@/lib/revenueCache";
+import { formatKRW } from "@/lib/format";
 
 export const revalidate = 60;
 
@@ -18,15 +18,7 @@ export default async function Home() {
   const allRegions = new Set(companies.map((c) => c.region).filter(Boolean));
 
   const news = await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
-
-  // 매출 합산 — 시트 제출 수치(원 단위). 기업이 여러 해 참가하므로 기업별 최신 1건만 합산
-  const latestRevByCompany = new Map<string, (typeof companies)[number]>();
-  for (const c of companies) {
-    if (!c.revenue) continue;
-    const prev = latestRevByCompany.get(c.name);
-    if (!prev || Number(c.year) > Number(prev.year)) latestRevByCompany.set(c.name, c);
-  }
-  const revenueWon = sumWon([...latestRevByCompany.values()].map((c) => c.revenue));
+  const rev = await getRevenueAggregate().catch(() => ({ totalKRW: 0, companies: 0 }));
 
   // 이달의 뉴스 건수
   const now = new Date();
@@ -55,7 +47,7 @@ export default async function Home() {
             value={`${currentYearRegions.size}개국`}
             sub={`누적 ${allRegions.size}개국`}
             color="blue"
-            href={`/startups?year=${currentYear}`}
+            href={`/programs?year=${currentYear}`}
           />
           <KpiCard
             title="관리 기업 수"
@@ -64,9 +56,9 @@ export default async function Home() {
             href="/startups"
           />
           <KpiCard
-            title="매출 합산"
-            value={revenueWon > 0 ? `${formatKRW(revenueWon)}원` : "—"}
-            sub={revenueWon > 0 ? `참여기업 제출 매출 (${latestRevByCompany.size}개사)` : "NICE / DART 연동 예정"}
+            title="매출 합산 (DART)"
+            value={rev.totalKRW > 0 ? `${formatKRW(rev.totalKRW)}원` : "—"}
+            sub={rev.totalKRW > 0 ? `DART 공시 ${rev.companies}개사` : "DART 집계 준비 중"}
             color="purple"
             href="/startups"
           />
@@ -78,16 +70,6 @@ export default async function Home() {
             href="/news"
           />
         </div>
-      </section>
-
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-primary">이번 주 뉴스</h2>
-          <Link href="/news" className="text-xs text-secondary hover:text-accent">
-            전체 보기 →
-          </Link>
-        </div>
-        <NewsCalendar news={news} />
       </section>
 
       <InvestmentHighlights companies={companies} />
