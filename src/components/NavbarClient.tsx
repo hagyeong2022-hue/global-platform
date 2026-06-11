@@ -18,9 +18,10 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export default function NavbarClient({ userEmail }: { userEmail: string | null }) {
+export default function NavbarClient({ userEmail, isAdmin = false }: { userEmail: string | null; isAdmin?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const menus = isAdmin ? [...MENUS, { href: "/admin", label: "관리자" }] : MENUS;
 
   return (
     <header className="bg-surface/80 backdrop-blur border-b border-edge sticky top-0 z-20">
@@ -31,7 +32,7 @@ export default function NavbarClient({ userEmail }: { userEmail: string | null }
 
         {/* 데스크톱 메뉴 */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-          {MENUS.map((m) => (
+          {menus.map((m) => (
             <Link
               key={m.href}
               href={m.href}
@@ -78,7 +79,7 @@ export default function NavbarClient({ userEmail }: { userEmail: string | null }
       {/* 모바일 메뉴 */}
       {mobileOpen && (
         <nav className="md:hidden border-t border-edge bg-surface px-4 py-3 flex flex-col gap-1 text-sm font-medium">
-          {MENUS.map((m) => (
+          {menus.map((m) => (
             <Link
               key={m.href}
               href={m.href}

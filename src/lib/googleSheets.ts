@@ -6,6 +6,7 @@ const COMPANIES_TAB = process.env.SHEETS_COMPANIES_TAB || "기업목록";
 
 export type Company = {
   id: string;
+  rowNumber: number; // 시트 실제 행 번호 (쓰기 대상 식별용)
   year: string;
   programName: string;
   region: string;
@@ -22,38 +23,54 @@ export type Company = {
   managerEmail: string;
   managerPhone: string;
   establishedDate: string;
-  revenue: string; // S열: 매출(단위:백만원)
-  investmentAmount: string; // T열: 투자(단위:백만원)
-  employment: string; // U열: 고용(단위:명)
+  revenue: string; // S열: 매출
+  investmentAmount: string; // T열: 투자
+  employment: string; // U열: 고용
   investmentStage: string; // V열: 투자단계
   lastInvestmentDate: string; // W열: 최근투자일
 };
 
-function getAuth() {
+// 대시보드에서 편집(시트로 되쓰기) 허용하는 성장지표 컬럼만 정의
+// — 기업 식별정보(이름·사업자번호 등)는 시트에서만 수정 (행 정합성 보호)
+export const EDITABLE_COLUMNS = {
+  revenue: "S",
+  investmentAmount: "T",
+  employment: "U",
+  investmentStage: "V",
+  lastInvestmentDate: "W",
+} as const;
+export type EditableField = keyof typeof EDITABLE_COLUMNS;
+
+function getAuth(readonly = true) {
   const keyBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY!;
   const key = JSON.parse(Buffer.from(keyBase64, "base64").toString("utf-8"));
   return new google.auth.GoogleAuth({
     credentials: key,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    scopes: [
+      readonly
+        ? "https://www.googleapis.com/auth/spreadsheets.readonly"
+        : "https://www.googleapis.com/auth/spreadsheets",
+    ],
   });
 }
 
 export async function getCompanies(): Promise<Company[]> {
-  const auth = getAuth();
+  const auth = getAuth(true);
   const sheets = google.sheets({ version: "v4", auth });
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    // V(투자단계)·W(최근투자일)는 값이 없어도 빈값으로 처리됨
     range: `'${COMPANIES_TAB}'!A3:W1000`,
   });
 
   const rows = res.data.values ?? [];
 
   return rows
-    .filter((row) => row[5]?.toString().trim())
-    .map((row, idx) => ({
-      id: `${row[0] ?? ""}-${row[1] ?? idx}`,
+    .map((row, idx) => ({ row, rowNumber: idx + 3 })) // A3에서 시작 → 실제 행 번호
+    .filter(({ row }) => row[5]?.toString().trim())
+    .map(({ row, rowNumber }) => ({
+      id: `${row[0] ?? ""}-${row[1] ?? rowNumber}`,
+      rowNumber,
       year: String(row[0] ?? ""),
       programName: String(row[2] ?? ""),
       region: String(row[3] ?? ""),
@@ -76,4 +93,35 @@ export async function getCompanies(): Promise<Company[]> {
       investmentStage: String(row[21] ?? "").trim(),
       lastInvestmentDate: String(row[22] ?? "").trim(),
     }));
+}
+
+/**
+ * 특정 행의 성장지표 컬럼(S~W)만 시트로 되쓰기 (Option A: 시트가 원본).
+ * EDITABLE_COLUMNS에 정의된 필드만 허용 — 그 외는 무시.
+ */
+export async function updateCompanyRow(
+  rowNumber: number,
+  fields: Partial<Record<EditableField, string>>
+): Promise<{ updated: EditableField[] }> {
+  if (!Number.isInteger(rowNumber) || rowNumber < 3 || rowNumber > 100000) {
+    throw new Error("유효하지 않은 행 번호");
+  }
+  const entries = (Object.entries(fields) as [EditableField, string][]).filter(
+    ([k]) => k in EDITABLE_COLUMNS
+  );
+  if (entries.length === 0) return { updated: [] };
+
+  const auth = getAuth(false);
+  const sheets = google.sheets({ version: "v4", auth });
+  const data = entries.map(([k, v]) => ({
+    range: `'${COMPANIES_TAB}'!${EDITABLE_COLUMNS[k]}${rowNumber}`,
+    values: [[v ?? ""]],
+  }));
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: { valueInputOption: "USER_ENTERED", data },
+  });
+
+  return { updated: entries.map(([k]) => k) };
 }
