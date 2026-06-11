@@ -15,7 +15,7 @@ export default function InvestmentHighlights({ companies }: { companies: Company
 
   return (
     <section>
-      <h2 className="text-base font-semibold text-primary mb-4">투자유치 하이라이트</h2>
+      <h2 className="section-header mb-4">투자유치 하이라이트</h2>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {staged.map((c) => (
           <Link

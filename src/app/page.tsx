@@ -43,16 +43,11 @@ export default async function Home() {
     .slice(0, 6);
 
   return (
-    <div className="flex flex-col gap-10">
-      <section>
-        <h2 className="text-base font-semibold text-primary mb-4">오늘의 뉴스</h2>
-        <NewsFeed news={topNews} />
-      </section>
+    <div className="flex flex-col gap-8">
 
-      <InvestmentHighlights companies={companies} />
-
+      {/* KPI 카드 4개 — 전체 너비 균등 분할 */}
       <section>
-        <h2 className="text-base font-semibold text-primary mb-4">주요 현황</h2>
+        <h2 className="section-header mb-4">주요 현황</h2>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard
             title={`올해 진출 지원 국가 (${currentYear})`}
@@ -84,14 +79,48 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="flex justify-center pb-4">
-        <Link
-          href="/startups"
-          className="px-6 py-3 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-        >
-          스타트업 전체 보기 →
-        </Link>
-      </section>
+      {/* 투자 하이라이트 */}
+      <InvestmentHighlights companies={companies} />
+
+      {/* 뉴스 + 바로가기 — 2컬럼 */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* 뉴스 피드 — 2/3 너비 */}
+        <section className="lg:col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="section-header">최신 뉴스</h2>
+            <Link href="/news" className="text-xs text-accent hover:text-accent-hover transition-colors">
+              전체 보기 →
+            </Link>
+          </div>
+          <NewsFeed news={topNews} />
+        </section>
+
+        {/* 빠른 이동 — 1/3 너비 */}
+        <aside className="flex flex-col gap-3">
+          <h2 className="section-header mb-1">바로가기</h2>
+          {[
+            { href: "/startups", label: "스타트업 목록", sub: `전체 ${companies.length}개사`, icon: "👥" },
+            { href: "/bookmarks", label: "관심기업", sub: "★ 즐겨찾기한 기업", icon: "⭐" },
+            { href: "/programs", label: "프로그램 현황", sub: "연도별·국가별 현황", icon: "📅" },
+            { href: "/news", label: "뉴스 아카이브", sub: "전체 뉴스 캘린더", icon: "📰" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-4 p-4 rounded-xl border border-edge bg-surface hover:bg-elevated hover:border-accent/40 hover:-translate-y-0.5 transition-all"
+            >
+              <span className="text-2xl w-9 h-9 flex items-center justify-center bg-elevated rounded-lg shrink-0">
+                {item.icon}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-primary">{item.label}</p>
+                <p className="text-xs text-secondary mt-0.5">{item.sub}</p>
+              </div>
+              <span className="ml-auto text-secondary text-sm">→</span>
+            </Link>
+          ))}
+        </aside>
+      </div>
     </div>
   );
 }

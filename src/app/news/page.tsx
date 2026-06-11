@@ -21,8 +21,8 @@ export default async function NewsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-primary">뉴스</h1>
+      <div className="pb-4 border-b border-edge">
+        <h1 className="text-2xl font-bold text-primary">뉴스</h1>
         <p className="text-sm text-secondary mt-1">
           {years.join("·")}년 참여 기업의 최신 뉴스 아카이브
         </p>
