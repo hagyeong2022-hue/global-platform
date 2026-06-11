@@ -1,6 +1,7 @@
 import { getCompanies } from "@/lib/googleSheets";
 import { searchNews } from "@/lib/naverNews";
 import IrPanel from "@/components/IrPanel";
+import BookmarkStar from "@/components/BookmarkStar";
 import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import StageBadge from "@/components/ui/StageBadge";
 import CompanyNewsTabs from "@/components/CompanyNewsTabs";
@@ -176,7 +177,10 @@ export default async function CompanyDetailPage({
               </div>
             </div>
           </div>
-          <IrPanel companyName={company.name} />
+          <div className="flex flex-col gap-2 items-end">
+            <BookmarkStar companyName={company.name} />
+            <IrPanel companyName={company.name} />
+          </div>
         </div>
 
         {/* 기업 개요 문장 */}

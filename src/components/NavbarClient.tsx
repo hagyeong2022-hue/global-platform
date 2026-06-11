@@ -30,6 +30,15 @@ export default function NavbarClient({ userEmail, isAdmin = false }: { userEmail
           SBA <span className="text-accent">Global</span>
         </Link>
 
+        {/* 검색 (⌘K) */}
+        <button
+          onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
+          className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-edge text-xs text-secondary hover:bg-elevated hover:text-primary transition-colors"
+        >
+          <span>🔍 검색</span>
+          <kbd className="text-[10px] px-1 py-0.5 rounded bg-elevated border border-edge">⌘K</kbd>
+        </button>
+
         {/* 데스크톱 메뉴 */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
           {menus.map((m) => (
