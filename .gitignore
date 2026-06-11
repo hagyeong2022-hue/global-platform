@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 로컬 전용 시트 관리 스크립트 (시트 ID 하드코딩 — 공개 레포 제외)
+scripts/
