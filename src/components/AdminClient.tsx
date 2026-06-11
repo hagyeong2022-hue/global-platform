@@ -201,6 +201,12 @@ export default function AdminClient({ companies }: { companies: Company[] }) {
                           onChange={(e) => setVal(c.rowNumber, "investmentStage", e.target.value)}
                           className="rounded-lg border border-edge bg-base px-2 py-1.5 text-sm text-primary focus:outline-none focus:ring-1 focus:ring-accent"
                         >
+                          {/* 비표준 기존값(예: Y·해당없음)도 보이게 동적 포함 — 표준값으로 교체 유도 */}
+                          {!STAGES.includes(getVal(c, "investmentStage")) && (
+                            <option value={getVal(c, "investmentStage")}>
+                              {getVal(c, "investmentStage")} (비표준)
+                            </option>
+                          )}
                           {STAGES.map((s) => (
                             <option key={s} value={s}>{s || "—"}</option>
                           ))}

@@ -25,7 +25,7 @@ type ColumnKey =
   | "employment";
 
 // 컬럼 순서 = 필터 드롭다운 순서와 정렬 (분야 → 진출 국가 → 프로그램 → 투자단계)
-const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => string }[] = [
+const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => string; csvValue?: (c: Company) => string }[] = [
   { key: "name", label: "기업명", sortValue: (c) => c.name },
   { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage },
   { key: "industry", label: "분야", sortValue: (c) => c.industry },
@@ -34,7 +34,7 @@ const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => s
   { key: "country", label: "진출 국가", sortValue: (c) => c.region },
   { key: "program", label: "프로그램", sortValue: (c) => c.programName },
   { key: "establishedDate", label: "설립일", sortValue: (c) => c.establishedDate },
-  { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0") },
+  { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0"), csvValue: (c: Company) => c.employment },
 ];
 
 const DEFAULT_VISIBLE: ColumnKey[] = ["name", "stage", "industry", "description", "ceoName", "country", "program"];
@@ -116,7 +116,7 @@ function downloadCsv(companies: Company[], visibleCols: ColumnKey[]) {
   const rows = companies.map((c) =>
     cols
       .map((col) => {
-        const v = col.sortValue(c) ?? "";
+        const v = (col.csvValue ? col.csvValue(c) : col.sortValue(c)) ?? "";
         return `"${String(v).replace(/"/g, '""')}"`;
       })
       .join(",")

@@ -22,16 +22,17 @@ async function getUserRecord(email: string): Promise<UserRec> {
   let rec: UserRec = { allowed: false, role: "member" };
   try {
     const supabase = getSupabaseAdmin();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("allowed_users")
       .select("role")
       .eq("email", key)
       .maybeSingle();
+    if (error) return rec; // DB 장애: 결과를 캐시하지 않음 (signIn의 env fallback이 보완)
     if (data) rec = { allowed: true, role: data.role ?? "member" };
+    userCache.set(key, { rec, at: Date.now() }); // 정상 조회만 캐시
   } catch {
-    // DB 장애 시 아래 env fallback
+    // DB 장애: 캐시 금지
   }
-  userCache.set(key, { rec, at: Date.now() });
   return rec;
 }
 
