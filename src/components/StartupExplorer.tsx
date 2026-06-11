@@ -5,9 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { Company } from "@/lib/googleSheets";
 import StageBadge from "@/components/ui/StageBadge";
-import CompanyAvatar from "@/components/ui/CompanyAvatar";
 import { countryFlag } from "@/lib/countryFlag";
-import { emailDomain } from "@/lib/companyLogo";
 
 // ─── 필터 축 정의 ───────────────────────────────────────────
 type FilterKey = "year" | "industry" | "country" | "program" | "stage";
@@ -134,7 +132,7 @@ function downloadCsv(companies: Company[], visibleCols: ColumnKey[]) {
 }
 
 // ─── 메인 컴포넌트 ──────────────────────────────────────────
-export default function StartupExplorer({ companies, logoMap = {} }: { companies: Company[]; logoMap?: Record<string, string> }) {
+export default function StartupExplorer({ companies }: { companies: Company[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -425,16 +423,13 @@ export default function StartupExplorer({ companies, logoMap = {} }: { companies
                   >
                     {visibleCols.includes("name") && (
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="flex items-center gap-2.5">
-                          <CompanyAvatar name={c.name} logoUrl={logoMap[c.name]} domain={emailDomain(c)} size="sm" />
-                          <Link
-                            href={`/companies/${encodeURIComponent(c.id)}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="font-medium text-primary hover:text-accent"
-                          >
-                            {c.name}
-                          </Link>
-                        </span>
+                        <Link
+                          href={`/companies/${encodeURIComponent(c.id)}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-medium text-primary hover:text-accent"
+                        >
+                          {c.name}
+                        </Link>
                       </td>
                     )}
                     {visibleCols.includes("stage") && (

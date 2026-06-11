@@ -5,8 +5,6 @@ import InvestmentHighlights from "@/components/InvestmentHighlights";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
 import { getNewsFromCache } from "@/lib/newsCache";
-import { emailDomain } from "@/lib/companyLogo";
-import { getLogoMap } from "@/lib/logos";
 import { getRevenueAggregate } from "@/lib/revenueCache";
 import { formatKRW } from "@/lib/format";
 
@@ -26,14 +24,6 @@ export default async function Home() {
     ? cachedNews.filter((n) => currentYearNames.has(n.companyName))
     : await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
   const rev = await getRevenueAggregate().catch(() => ({ totalKRW: 0, companies: 0 }));
-  const newsLogos = await getLogoMap().catch((): Record<string, string> => ({}));
-  const newsDomains: Record<string, string> = {};
-  for (const c of companies) {
-    if (!newsDomains[c.name]) {
-      const d = emailDomain(c);
-      if (d) newsDomains[c.name] = d;
-    }
-  }
 
   // 이달의 뉴스 건수
   const now = new Date();
@@ -91,7 +81,7 @@ export default async function Home() {
 
       <section>
         <h2 className="text-base font-semibold text-primary mb-4">오늘의 뉴스</h2>
-        <NewsFeed news={topNews} domains={newsDomains} logos={newsLogos} />
+        <NewsFeed news={topNews} />
       </section>
 
       <section className="flex justify-center pb-4">

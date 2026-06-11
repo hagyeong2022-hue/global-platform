@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getSetting, maskSecret } from "@/lib/settings";
+import { getSetting, getEffectiveSetting, maskSecret } from "@/lib/settings";
 import AdminSettingsClient from "@/components/AdminSettingsClient";
 
 export const revalidate = 0;
@@ -15,10 +15,10 @@ export default async function AdminSettingsPage() {
   if (!(session?.user?.role === "admin" || isE2E())) redirect("/");
 
   const initial = {
-    dart_api_key: maskSecret(await getSetting("dart_api_key")),
-    innoforest_api_key: maskSecret(await getSetting("innoforest_api_key")),
+    dart_api_key: maskSecret((await getEffectiveSetting("dart_api_key")).value),
+    innoforest_api_key: maskSecret((await getEffectiveSetting("innoforest_api_key")).value),
     innoforest_api_base: (await getSetting("innoforest_api_base")) ?? "",
-    innoforest_enabled: (await getSetting("innoforest_enabled")) === "true",
+    innoforest_enabled: (await getEffectiveSetting("innoforest_enabled")).value === "true",
   };
 
   return (

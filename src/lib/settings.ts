@@ -42,3 +42,21 @@ export function maskSecret(value: string | null | undefined): string | null {
   const tail = value.slice(-4);
   return `••••${tail}`;
 }
+
+// 설정값을 DB 우선, 없으면 env에서 가져옴 (상태 표시용). source로 출처 구분.
+const ENV_MAP: Record<SettingKey, string> = {
+  dart_api_key: "DART_API_KEY",
+  innoforest_api_key: "INNOFOREST_API_KEY",
+  innoforest_api_base: "INNOFOREST_API_BASE",
+  innoforest_enabled: "INNOFOREST_ENABLED",
+};
+
+export async function getEffectiveSetting(
+  key: SettingKey
+): Promise<{ value: string | null; source: "db" | "env" | null }> {
+  const db = await getSetting(key);
+  if (db) return { value: db, source: "db" };
+  const env = process.env[ENV_MAP[key]];
+  if (env) return { value: env, source: "env" };
+  return { value: null, source: null };
+}

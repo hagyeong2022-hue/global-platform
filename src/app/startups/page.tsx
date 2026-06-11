@@ -1,12 +1,11 @@
 import { Suspense } from "react";
 import { getCompanies } from "@/lib/googleSheets";
-import { getLogoMap } from "@/lib/logos";
 import StartupExplorer from "@/components/StartupExplorer";
 
 export const revalidate = 60;
 
 export default async function StartupsPage() {
-  const [companies, logoMap] = await Promise.all([getCompanies().catch(() => []), getLogoMap().catch((): Record<string, string> => ({}))]);
+  const companies = await getCompanies().catch(() => []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -17,7 +16,7 @@ export default async function StartupsPage() {
         </p>
       </div>
       <Suspense fallback={<div className="text-sm text-secondary">불러오는 중…</div>}>
-        <StartupExplorer companies={companies} logoMap={logoMap} />
+        <StartupExplorer companies={companies} />
       </Suspense>
     </div>
   );
