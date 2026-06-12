@@ -3,6 +3,7 @@ import KpiCard from "@/components/KpiCard";
 import NewsColumn from "@/components/NewsColumn";
 import InvestmentHighlights from "@/components/InvestmentHighlights";
 import SupportAnnouncements from "@/components/SupportAnnouncements";
+import { getAnnouncementsFromCache } from "@/lib/kstartup";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
 import { getNewsFromCache } from "@/lib/newsCache";
@@ -25,6 +26,8 @@ export default async function Home() {
     ? cachedNews.filter((n) => currentYearNames.has(n.companyName))
     : await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
   const rev = await getRevenueAggregate().catch(() => ({ totalKRW: 0, companies: 0 }));
+  const announcements = await getAnnouncementsFromCache(50).catch(() => []);
+  const hasApiKey = !!process.env.KSTARTUP_API_KEY;
 
   // 이달의 뉴스 건수
   const now = new Date();
@@ -134,7 +137,7 @@ export default async function Home() {
       </section>
 
       {/* ── 지원공고 ── */}
-      <SupportAnnouncements />
+      <SupportAnnouncements announcements={announcements} hasApiKey={hasApiKey} />
 
     </div>
   );
