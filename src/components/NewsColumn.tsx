@@ -1,0 +1,81 @@
+import type { CompanyNewsItem } from "@/lib/newsAggregate";
+import { CATEGORY_COLORS } from "@/lib/newsCategory";
+
+function NewsRowCard({ companyName, item, category, score }: CompanyNewsItem) {
+  const date = new Date(item.pubDate).toLocaleDateString("ko-KR", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const catColor = CATEGORY_COLORS[category];
+
+  return (
+    <a
+      href={item.originallink || item.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex gap-3 p-3.5 border-b border-edge last:border-0 hover:bg-elevated transition-colors group"
+    >
+      {/* 카테고리 컬러 라인 */}
+      <div className="w-0.5 rounded-full shrink-0 self-stretch" style={{ backgroundColor: catColor }} />
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold text-primary truncate">{companyName}</span>
+          {score >= 8 && (
+            <span className="text-[10px] font-medium text-[#B45309] bg-[#D97706]/12 px-1.5 py-0.5 rounded-full shrink-0">
+              주요
+            </span>
+          )}
+          <span
+            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-auto"
+            style={{ backgroundColor: `${catColor}20`, color: catColor }}
+          >
+            {category}
+          </span>
+        </div>
+        <p className="text-sm text-primary line-clamp-2 group-hover:text-accent transition-colors">{item.title}</p>
+        <p className="text-[11px] text-secondary mt-1 tnum">{date}</p>
+      </div>
+    </a>
+  );
+}
+
+interface NewsColumnProps {
+  title: string;
+  news: CompanyNewsItem[];
+  accentColor?: string;
+  href?: string;
+}
+
+export default function NewsColumn({ title, news, accentColor = "#1A56DB", href }: NewsColumnProps) {
+  return (
+    <div className="flex flex-col border border-edge rounded-xl bg-surface overflow-hidden">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-edge bg-elevated/50">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: accentColor }} />
+          <h3 className="text-sm font-semibold text-primary">{title}</h3>
+          <span className="label-xs">{news.length}건</span>
+        </div>
+        {href && (
+          <a href={href} className="text-xs text-accent hover:text-accent-hover transition-colors">
+            전체 →
+          </a>
+        )}
+      </div>
+
+      {/* 뉴스 목록 */}
+      {news.length === 0 ? (
+        <div className="p-6 text-sm text-secondary text-center">수집된 뉴스가 없습니다.</div>
+      ) : (
+        <div className="divide-y divide-edge">
+          {news.map((n, i) => (
+            <NewsRowCard key={`${n.companyId}-${i}`} {...n} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

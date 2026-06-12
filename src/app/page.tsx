@@ -1,7 +1,8 @@
 import Link from "next/link";
 import KpiCard from "@/components/KpiCard";
-import NewsFeed from "@/components/NewsFeed";
+import NewsColumn from "@/components/NewsColumn";
 import InvestmentHighlights from "@/components/InvestmentHighlights";
+import SupportAnnouncements from "@/components/SupportAnnouncements";
 import { getCompanies } from "@/lib/googleSheets";
 import { fetchCompaniesNews } from "@/lib/newsAggregate";
 import { getNewsFromCache } from "@/lib/newsCache";
@@ -32,23 +33,28 @@ export default async function Home() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   });
 
-  // 오늘의 뉴스 피드 — 점수·최신순 상위 6개
-  const topNews = [...news]
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime()
+  // 최신뉴스 — 점수·최신순 상위 8개 (기업 중복 제거)
+  const latestNews = [...news]
+    .sort((a, b) =>
+      b.score - a.score ||
+      new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime()
     )
     .filter((n, i, arr) => arr.findIndex((x) => x.companyName === n.companyName) === i)
-    .slice(0, 6);
+    .slice(0, 8);
+
+  // 투자유치뉴스 — category="투자" 최신순 상위 8개
+  const investNews = [...news]
+    .filter((n) => n.category === "투자")
+    .sort((a, b) => new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime())
+    .slice(0, 8);
 
   return (
     <div className="flex flex-col gap-8">
 
-      {/* KPI 카드 4개 — 전체 너비 균등 분할 */}
+      {/* ── 주요 현황: KPI 4개 + THE VC 카드 ── */}
       <section>
         <h2 className="section-header mb-4">주요 현황</h2>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
           <KpiCard
             title={`올해 진출 지원 국가 (${currentYear})`}
             value={`${currentYearRegions.size}개국`}
@@ -76,51 +82,60 @@ export default async function Home() {
             color="orange"
             href="/news"
           />
+          {/* THE VC 외부 연동 카드 */}
+          <a
+            href="https://thevc.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative rounded-xl border border-edge bg-surface p-5 flex flex-col gap-1 overflow-hidden transition-all hover:shadow-sm hover:-translate-y-0.5 hover:border-[#1A1A2E]/30"
+          >
+            <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl bg-[#1A1A2E]" />
+            <p className="label-xs">투자 데이터베이스</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xl font-bold text-[#1A1A2E]">THE VC</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A1A2E" strokeWidth="2.5" className="opacity-50 group-hover:opacity-100 transition-opacity">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </div>
+            <p className="text-xs text-secondary mt-1">스타트업 투자·IR 데이터</p>
+            <span className="absolute right-4 bottom-3.5 text-xs text-[#1A1A2E] opacity-0 group-hover:opacity-70 transition-opacity">
+              바로가기 →
+            </span>
+          </a>
         </div>
       </section>
 
-      {/* 투자 하이라이트 */}
+      {/* ── 투자유치 하이라이트 ── */}
       <InvestmentHighlights companies={companies} />
 
-      {/* 뉴스 + 바로가기 — 2컬럼 */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* 뉴스 피드 — 2/3 너비 */}
-        <section className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="section-header">최신 뉴스</h2>
-            <Link href="/news" className="text-xs text-accent hover:text-accent-hover transition-colors">
-              전체 보기 →
-            </Link>
-          </div>
-          <NewsFeed news={topNews} />
-        </section>
+      {/* ── 뉴스 1행 2열 ── */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="section-header">뉴스</h2>
+          <Link href="/news" className="text-xs text-accent hover:text-accent-hover transition-colors">
+            전체 보기 →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <NewsColumn
+            title="최신 뉴스"
+            news={latestNews}
+            accentColor="#1A56DB"
+            href="/news"
+          />
+          <NewsColumn
+            title="투자유치 뉴스"
+            news={investNews}
+            accentColor="#3B82F6"
+            href="/news?category=투자"
+          />
+        </div>
+      </section>
 
-        {/* 빠른 이동 — 1/3 너비 */}
-        <aside className="flex flex-col gap-3">
-          <h2 className="section-header mb-1">바로가기</h2>
-          {[
-            { href: "/startups", label: "스타트업 목록", sub: `전체 ${companies.length}개사`, icon: "👥" },
-            { href: "/bookmarks", label: "관심기업", sub: "★ 즐겨찾기한 기업", icon: "⭐" },
-            { href: "/programs", label: "프로그램 현황", sub: "연도별·국가별 현황", icon: "📅" },
-            { href: "/news", label: "뉴스 아카이브", sub: "전체 뉴스 캘린더", icon: "📰" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-4 p-4 rounded-xl border border-edge bg-surface hover:bg-elevated hover:border-accent/40 hover:-translate-y-0.5 transition-all"
-            >
-              <span className="text-2xl w-9 h-9 flex items-center justify-center bg-elevated rounded-lg shrink-0">
-                {item.icon}
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-primary">{item.label}</p>
-                <p className="text-xs text-secondary mt-0.5">{item.sub}</p>
-              </div>
-              <span className="ml-auto text-secondary text-sm">→</span>
-            </Link>
-          ))}
-        </aside>
-      </div>
+      {/* ── 지원공고 ── */}
+      <SupportAnnouncements />
+
     </div>
   );
 }
