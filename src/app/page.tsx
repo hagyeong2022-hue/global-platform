@@ -1,7 +1,6 @@
 import Link from "next/link";
 import KpiCard from "@/components/KpiCard";
 import NewsColumn from "@/components/NewsColumn";
-import InvestmentHighlights from "@/components/InvestmentHighlights";
 import SupportAnnouncements from "@/components/SupportAnnouncements";
 import { getAnnouncementsFromCache } from "@/lib/kstartup";
 import { getCompanies } from "@/lib/googleSheets";
@@ -108,9 +107,6 @@ export default async function Home() {
           </a>
         </div>
       </section>
-
-      {/* ── 투자유치 하이라이트 ── */}
-      <InvestmentHighlights companies={companies} />
 
       {/* ── 뉴스 1행 2열 ── */}
       <section>
