@@ -5,17 +5,21 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { Company } from "@/lib/googleSheets";
 import { mergeCompanies, type MergedCompany } from "@/lib/mergeCompanies";
+import { classifyIndustries, CATEGORY_STYLE, type IndustryCategory } from "@/lib/industryCategory";
 import StageBadge from "@/components/ui/StageBadge";
 import { countryFlag } from "@/lib/countryFlag";
+
+// 분류된 표준 분야 카테고리를 함께 들고 다니는 행 타입
+type Row = MergedCompany & { categories: IndustryCategory[] };
 
 // ─── 필터 축 정의 ───────────────────────────────────────────
 // 병합본 기준: 한 기업이 여러 값(국가·분야·프로그램·연도)을 가질 수 있으므로 배열로 다룬다.
 type FilterKey = "year" | "industry" | "country" | "program" | "stage";
 
-const FILTER_DEFS: { key: FilterKey; label: string; getValues: (c: MergedCompany) => string[] }[] = [
+const FILTER_DEFS: { key: FilterKey; label: string; getValues: (c: Row) => string[] }[] = [
   { key: "year", label: "지원 년도", getValues: (c) => c.years },
   { key: "stage", label: "투자단계", getValues: (c) => (c.investmentStage ? [c.investmentStage] : []) },
-  { key: "industry", label: "분야", getValues: (c) => c.industries },
+  { key: "industry", label: "분야", getValues: (c) => c.categories },
   { key: "country", label: "진출 국가", getValues: (c) => c.regions },
   { key: "program", label: "프로그램", getValues: (c) => c.programs },
 ];
@@ -27,10 +31,10 @@ type ColumnKey =
   | "employment";
 
 // 컬럼 순서 = 필터 드롭다운 순서와 정렬 (분야 → 진출 국가 → 프로그램 → 투자단계)
-const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: MergedCompany) => string; csvValue: (c: MergedCompany) => string }[] = [
+const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Row) => string; csvValue: (c: Row) => string }[] = [
   { key: "name", label: "기업명", sortValue: (c) => c.name, csvValue: (c) => c.name },
   { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage, csvValue: (c) => c.investmentStage },
-  { key: "industry", label: "분야", sortValue: (c) => c.industries.join(","), csvValue: (c) => c.industries.join(" / ") },
+  { key: "industry", label: "분야", sortValue: (c) => c.categories.join(","), csvValue: (c) => c.categories.join(" / ") },
   { key: "description", label: "아이템", sortValue: (c) => c.descriptions.join(" "), csvValue: (c) => c.descriptions.join(" / ") },
   { key: "ceoName", label: "대표자", sortValue: (c) => c.ceoName, csvValue: (c) => c.ceoName },
   { key: "country", label: "진출 국가", sortValue: (c) => c.regions.join(","), csvValue: (c) => c.regions.join(" / ") },
@@ -112,7 +116,7 @@ function MultiSelect({
 }
 
 // ─── CSV 다운로드 ───────────────────────────────────────────
-function downloadCsv(companies: MergedCompany[], visibleCols: ColumnKey[]) {
+function downloadCsv(companies: Row[], visibleCols: ColumnKey[]) {
   const cols = COLUMN_DEFS.filter((c) => visibleCols.includes(c.key));
   const header = cols.map((c) => c.label).join(",");
   const rows = companies.map((c) =>
@@ -136,7 +140,11 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
   const searchParams = useSearchParams();
 
   // 동일 기업(사업자번호/사명) 여러 행 → 1건으로 병합 (중복 제외 기준)
-  const merged = useMemo(() => mergeCompanies(companies), [companies]);
+  // + 자유 입력 분야를 표준 카테고리로 분류해 함께 보관
+  const merged = useMemo<Row[]>(
+    () => mergeCompanies(companies).map((c) => ({ ...c, categories: classifyIndustries(c.industries) })),
+    [companies]
+  );
 
   // URL → 필터 상태 (단일 소스: URL)
   const filters = useMemo(() => {
@@ -446,7 +454,24 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
                       </td>
                     )}
                     {visibleCols.includes("industry") && (
-                      <td className="px-4 py-3 whitespace-nowrap text-secondary">{c.industries.join(", ") || "—"}</td>
+                      <td className="px-4 py-3 align-middle" title={c.industries.join(" / ")}>
+                        <span className="flex flex-wrap gap-1 max-w-[160px]">
+                          {c.categories.slice(0, 3).map((cat) => (
+                            <span
+                              key={cat}
+                              className="inline-block px-1.5 py-0.5 rounded-md text-[11px] font-medium whitespace-nowrap"
+                              style={{ backgroundColor: CATEGORY_STYLE[cat].bg, color: CATEGORY_STYLE[cat].fg }}
+                            >
+                              {cat}
+                            </span>
+                          ))}
+                          {c.categories.length > 3 && (
+                            <span className="inline-block px-1.5 py-0.5 text-[11px] text-secondary">
+                              +{c.categories.length - 3}
+                            </span>
+                          )}
+                        </span>
+                      </td>
                     )}
                     {visibleCols.includes("description") && (
                       <td className="px-4 py-3 text-secondary max-w-md truncate" title={c.descriptions.join(" / ")}>
