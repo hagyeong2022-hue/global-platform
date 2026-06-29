@@ -2,7 +2,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { searchNews } from "@/lib/naverNews";
 import type { Company } from "@/lib/googleSheets";
 import { categorizeNews, NewsCategory } from "@/lib/newsCategory";
-import { calcScore, CompanyNewsItem } from "@/lib/newsAggregate";
+import { calcScore, isRelevantNews, CompanyNewsItem } from "@/lib/newsAggregate";
 
 // 뉴스를 news_cache에 모아두고 화면은 DB만 읽는다 (첫 로딩 가속 + 네이버 호출 분산).
 
@@ -26,6 +26,7 @@ export async function collectNews(
         } catch {
           return;
         }
+        items = items.filter((it) => isRelevantNews(c.name, it));
         if (!items.length) return;
         const rows = items.map((it) => ({
           company_name: c.name,
@@ -56,22 +57,25 @@ export async function getNewsFromCache(limit = 500): Promise<CompanyNewsItem[]> 
       .order("pub_date", { ascending: false })
       .limit(limit);
     if (!data) return [];
-    return data.map((r, i) => {
-      const item = {
-        title: r.title,
-        link: r.link,
-        originallink: r.link,
-        description: r.description ?? "",
-        pubDate: r.pub_date,
-      };
-      return {
-        companyId: `${r.company_name}-${i}`,
-        companyName: r.company_name,
-        item,
-        category: (r.category as NewsCategory) ?? categorizeNews(r.title, r.description ?? ""),
-        score: calcScore(item),
-      };
-    });
+    return data
+      .map((r, i) => {
+        const item = {
+          title: r.title,
+          link: r.link,
+          originallink: r.link,
+          description: r.description ?? "",
+          pubDate: r.pub_date,
+        };
+        return {
+          companyId: `${r.company_name}-${i}`,
+          companyName: r.company_name,
+          item,
+          category: (r.category as NewsCategory) ?? categorizeNews(r.title, r.description ?? ""),
+          score: calcScore(item),
+        };
+      })
+      // 기존 캐시에 남아있는 무관 기사도 화면에서 제외
+      .filter((n) => isRelevantNews(n.companyName, n.item));
   } catch {
     return [];
   }
