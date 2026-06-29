@@ -35,12 +35,9 @@ export default async function Home() {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   });
 
-  // 최신뉴스 — 점수·최신순 상위 8개 (기업 중복 제거)
+  // 최신뉴스 — 날짜 최신순 상위 8개 (기업 중복 제거)
   const latestNews = [...news]
-    .sort((a, b) =>
-      b.score - a.score ||
-      new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime()
-    )
+    .sort((a, b) => new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime())
     .filter((n, i, arr) => arr.findIndex((x) => x.companyName === n.companyName) === i)
     .slice(0, 8);
 

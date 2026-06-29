@@ -10,7 +10,7 @@
 
 const API_BASE =
   process.env.KSTARTUP_API_BASE_URL ||
-  "https://apis.data.go.kr/1130000/StartBizAnnouncementService/getAnnouncementList";
+  "https://apis.data.go.kr/B552735/kisedKstartupService01/getAnnouncementInformation01";
 
 export type SupportAnnouncement = {
   id: string;
@@ -38,11 +38,12 @@ export async function fetchKstartupAnnouncements(
   const key = process.env.KSTARTUP_API_KEY;
   if (!key) return [];
 
+  // 신규 data.go.kr(/B552735) 스타일: page / perPage / returnType
   const params = new URLSearchParams({
     serviceKey: key,
-    pageNo: String(pageNo),
-    numOfRows: String(numOfRows),
-    type: "json",
+    page: String(pageNo),
+    perPage: String(numOfRows),
+    returnType: "json",
   });
 
   const res = await fetch(`${API_BASE}?${params}`, {
@@ -51,46 +52,23 @@ export async function fetchKstartupAnnouncements(
   if (!res.ok) throw new Error(`K-Startup API ${res.status}`);
 
   const json = await res.json();
-
-  // 공공데이터 표준 응답 구조 파싱
-  const body = json?.response?.body ?? json?.body ?? json;
-  const rawItems: unknown[] = Array.isArray(body?.items?.item)
-    ? body.items.item
-    : Array.isArray(body?.items)
-    ? body.items
-    : [];
+  const rawItems: unknown[] = Array.isArray(json?.data) ? json.data : [];
 
   return rawItems.map((item: unknown) => {
-    const it = item as Record<string, string>;
+    const it = item as Record<string, string | number | null>;
+    const s = (v: string | number | null | undefined) => (v == null ? undefined : String(v));
 
-    // 공고명 — 필드명은 API 가이드 확인 후 조정
-    const title =
-      it["사업공고명"] ?? it["pbanc_nm"] ?? it["announcementName"] ?? it["title"] ?? "제목 없음";
-
-    // 주관기관
-    const org_name =
-      it["주관기관"] ?? it["jrsd_inst_nm"] ?? it["institutionName"] ?? it["orgName"] ?? "";
-
-    // 카테고리/지원유형
-    const category =
-      it["지원사업분류"] ?? it["bizType"] ?? it["supportType"] ?? it["category"] ?? "기타";
-
-    // 날짜
-    const apply_start = toIsoDate(
-      it["모집시작일"] ?? it["rcept_bgng_de"] ?? it["applyStartDate"] ?? it["startDate"]
-    );
-    const apply_end = toIsoDate(
-      it["모집마감일"] ?? it["rcept_end_de"] ?? it["applyEndDate"] ?? it["endDate"]
-    );
-
-    // 공고 URL
+    const title = s(it["biz_pbanc_nm"]) ?? s(it["intg_pbanc_biz_nm"]) ?? "제목 없음";
+    const org_name = s(it["pbanc_ntrp_nm"]) ?? s(it["sprv_inst"]) ?? "";
+    const category = s(it["supt_biz_clsfc"]) ?? "기타";
+    const apply_start = toIsoDate(s(it["pbanc_rcpt_bgng_dt"]));
+    const apply_end = toIsoDate(s(it["pbanc_rcpt_end_dt"]));
     const url =
-      it["공고URL"] ?? it["pbanc_url"] ?? it["announcementUrl"] ?? it["detailUrl"] ??
-      `https://www.k-startup.go.kr/web/contents/bizpbannouncementList.do`;
-
-    // 고유 ID
+      s(it["detl_pg_url"]) ??
+      s(it["biz_gdnc_url"]) ??
+      "https://www.k-startup.go.kr/web/contents/bizpbannouncementList.do";
     const id =
-      it["공고번호"] ?? it["pbancNo"] ?? it["id"] ??
+      s(it["pbanc_sn"]) ??
       `${title}-${apply_end ?? ""}`.replace(/\s/g, "-").slice(0, 80);
 
     return { id, title, org_name, category, apply_start, apply_end, url, source: "kstartup" };

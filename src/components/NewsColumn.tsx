@@ -15,28 +15,38 @@ function NewsRowCard({ companyName, item, category, score }: CompanyNewsItem) {
       href={item.originallink || item.link}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex gap-3 p-3.5 border-b border-edge last:border-0 hover:bg-elevated transition-colors group"
+      className="flex gap-0 hover:bg-elevated transition-colors group"
     >
       {/* 카테고리 컬러 라인 */}
-      <div className="w-0.5 rounded-full shrink-0 self-stretch" style={{ backgroundColor: catColor }} />
+      <div className="w-1 shrink-0 self-stretch rounded-l-sm" style={{ backgroundColor: catColor }} />
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-semibold text-primary truncate">{companyName}</span>
-          {score >= 8 && (
-            <span className="text-[10px] font-medium text-[#B45309] bg-[#D97706]/12 px-1.5 py-0.5 rounded-full shrink-0">
-              주요
-            </span>
-          )}
+      <div className="flex-1 min-w-0 px-4 py-3.5">
+        {/* 상단: 기업명 영역 — 배경으로 분리 */}
+        <div className="flex items-center gap-2 mb-2.5">
           <span
-            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-auto"
-            style={{ backgroundColor: `${catColor}20`, color: catColor }}
+            className="text-[11px] font-bold px-2.5 py-1 rounded-md text-white shrink-0"
+            style={{ backgroundColor: catColor }}
+          >
+            {companyName}
+          </span>
+          <span
+            className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
+            style={{ borderColor: `${catColor}40`, color: catColor, backgroundColor: `${catColor}12` }}
           >
             {category}
           </span>
+          {score >= 8 && (
+            <span className="text-[10px] font-semibold text-[#B45309] bg-[#D97706]/12 px-2 py-0.5 rounded-full shrink-0">
+              주요
+            </span>
+          )}
+          <span className="text-[11px] text-secondary/60 tnum ml-auto shrink-0">{date}</span>
         </div>
-        <p className="text-sm text-primary line-clamp-2 group-hover:text-accent transition-colors">{item.title}</p>
-        <p className="text-[11px] text-secondary mt-1 tnum">{date}</p>
+
+        {/* 하단: 뉴스 제목 */}
+        <p className="text-sm font-medium text-primary leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+          {item.title}
+        </p>
       </div>
     </a>
   );
