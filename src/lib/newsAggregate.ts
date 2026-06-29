@@ -112,6 +112,51 @@ export async function fetchCompaniesNews(
     .sort((a, b) => new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime());
 }
 
+// ── 스타트업 업계 뉴스 ──────────────────────────────────────
+// 개별 기업이 아니라, 창업·스타트업·투자 관련 정부정책·업계 변화를 감지하는 뉴스.
+const INDUSTRY_QUERIES = [
+  "스타트업 투자",
+  "벤처투자 정책",
+  "창업 지원 정책",
+  "중소벤처기업부 스타트업",
+  "스타트업 규제 완화",
+  "글로벌 진출 스타트업",
+];
+
+/** 업계/정책 뉴스 수집 — 토픽 검색이므로 companyName 자리엔 토픽 라벨이 들어간다 */
+export async function fetchIndustryNews(perQuery = 4): Promise<CompanyNewsItem[]> {
+  const results = await Promise.all(
+    INDUSTRY_QUERIES.map(async (q) => {
+      try {
+        const items = await searchNews(q, perQuery);
+        return items.map((item) => ({
+          companyId: `industry:${q}`,
+          companyName: q, // showCompany=false로 렌더하므로 화면엔 노출 안 됨
+          item,
+          category: categorizeNews(item.title, item.description),
+          score: calcScore(item),
+        }));
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  const seen = new Set<string>();
+  return results
+    .flat()
+    .filter((n) => {
+      // 스팸 패턴 제거 + 링크 기준 중복 제거
+      const textN = `${n.item.title} ${n.item.description}`.replace(/\s+/g, "").toLowerCase();
+      if (NOISE_PATTERNS.some((p) => textN.includes(p))) return false;
+      const key = n.item.originallink || n.item.link;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => new Date(b.item.pubDate).getTime() - new Date(a.item.pubDate).getTime());
+}
+
 /** YYYY-MM-DD (로컬 기준) */
 export function toDateKey(date: Date): string {
   const y = date.getFullYear();

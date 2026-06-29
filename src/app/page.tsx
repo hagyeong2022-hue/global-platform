@@ -4,7 +4,8 @@ import NewsColumn from "@/components/NewsColumn";
 import SupportAnnouncements from "@/components/SupportAnnouncements";
 import { getAnnouncementsFromCache } from "@/lib/kstartup";
 import { getCompanies } from "@/lib/googleSheets";
-import { fetchCompaniesNews } from "@/lib/newsAggregate";
+import { uniqueCompanyCount } from "@/lib/mergeCompanies";
+import { fetchCompaniesNews, fetchIndustryNews } from "@/lib/newsAggregate";
 import { getNewsFromCache } from "@/lib/newsCache";
 import { getRevenueAggregate } from "@/lib/revenueCache";
 import { formatKRW } from "@/lib/format";
@@ -26,7 +27,11 @@ export default async function Home() {
     : await fetchCompaniesNews(currentYearCompanies, 3).catch(() => []);
   const rev = await getRevenueAggregate().catch(() => ({ totalKRW: 0, companies: 0 }));
   const announcements = await getAnnouncementsFromCache(50).catch(() => []);
+  const industryNews = await fetchIndustryNews(4).catch(() => []);
   const hasApiKey = !!process.env.KSTARTUP_API_KEY;
+
+  // 중복 제외(기업 기준) 관리 기업 수
+  const uniqueCompanies = uniqueCompanyCount(companies);
 
   // 이달의 뉴스 건수
   const now = new Date();
@@ -63,7 +68,8 @@ export default async function Home() {
           />
           <KpiCard
             title="관리 기업 수"
-            value={`${companies.length.toLocaleString()}개사`}
+            value={`${uniqueCompanies.toLocaleString()}개사`}
+            sub="중복 제외 기준"
             color="green"
             href="/startups"
           />
@@ -120,12 +126,20 @@ export default async function Home() {
             accentColor="#1A56DB"
             href="/news"
           />
-          <NewsColumn
-            title="투자유치 뉴스"
-            news={investNews}
-            accentColor="#3B82F6"
-            href="/news?category=투자"
-          />
+          <div className="flex flex-col gap-5">
+            <NewsColumn
+              title="투자유치 뉴스"
+              news={investNews.slice(0, 5)}
+              accentColor="#3B82F6"
+              href="/news?category=투자"
+            />
+            <NewsColumn
+              title="스타트업 업계 뉴스"
+              news={industryNews.slice(0, 5)}
+              accentColor="#6D28D9"
+              showCompany={false}
+            />
+          </div>
         </div>
       </section>
 

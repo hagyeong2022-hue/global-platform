@@ -1,7 +1,24 @@
 import type { CompanyNewsItem } from "@/lib/newsAggregate";
 import { CATEGORY_COLORS } from "@/lib/newsCategory";
 
-function NewsRowCard({ companyName, item, category, score }: CompanyNewsItem) {
+/** originallink에서 출처 도메인 추출 (업계뉴스용) */
+function sourceLabel(item: CompanyNewsItem["item"]): string {
+  try {
+    const host = new URL(item.originallink || item.link).hostname.replace(/^www\./, "");
+    return host;
+  } catch {
+    return "뉴스";
+  }
+}
+
+function NewsRowCard({
+  row,
+  showCompany,
+}: {
+  row: CompanyNewsItem;
+  showCompany: boolean;
+}) {
+  const { companyName, item, category, score } = row;
   const date = new Date(item.pubDate).toLocaleDateString("ko-KR", {
     month: "short",
     day: "numeric",
@@ -21,24 +38,38 @@ function NewsRowCard({ companyName, item, category, score }: CompanyNewsItem) {
       <div className="w-1 shrink-0 self-stretch rounded-l-sm" style={{ backgroundColor: catColor }} />
 
       <div className="flex-1 min-w-0 px-4 py-3.5">
-        {/* 상단: 기업명 영역 — 배경으로 분리 */}
+        {/* 상단: 기업명/카테고리 영역 */}
         <div className="flex items-center gap-2 mb-2.5">
-          <span
-            className="text-[11px] font-bold px-2.5 py-1 rounded-md text-white shrink-0"
-            style={{ backgroundColor: catColor }}
-          >
-            {companyName}
-          </span>
-          <span
-            className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
-            style={{ borderColor: `${catColor}40`, color: catColor, backgroundColor: `${catColor}12` }}
-          >
-            {category}
-          </span>
+          {showCompany ? (
+            <span
+              className="text-[11px] font-bold px-2.5 py-1 rounded-md text-white shrink-0"
+              style={{ backgroundColor: catColor }}
+            >
+              {companyName}
+            </span>
+          ) : (
+            <span
+              className="text-[11px] font-bold px-2.5 py-1 rounded-md text-white shrink-0"
+              style={{ backgroundColor: catColor }}
+            >
+              {category}
+            </span>
+          )}
+          {showCompany && (
+            <span
+              className="text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0"
+              style={{ borderColor: `${catColor}40`, color: catColor, backgroundColor: `${catColor}12` }}
+            >
+              {category}
+            </span>
+          )}
           {score >= 8 && (
             <span className="text-[10px] font-semibold text-[#B45309] bg-[#D97706]/12 px-2 py-0.5 rounded-full shrink-0">
               주요
             </span>
+          )}
+          {!showCompany && (
+            <span className="text-[11px] text-secondary truncate min-w-0">{sourceLabel(item)}</span>
           )}
           <span className="text-[11px] text-secondary/60 tnum ml-auto shrink-0">{date}</span>
         </div>
@@ -57,9 +88,10 @@ interface NewsColumnProps {
   news: CompanyNewsItem[];
   accentColor?: string;
   href?: string;
+  showCompany?: boolean;
 }
 
-export default function NewsColumn({ title, news, accentColor = "#1A56DB", href }: NewsColumnProps) {
+export default function NewsColumn({ title, news, accentColor = "#1A56DB", href, showCompany = true }: NewsColumnProps) {
   return (
     <div className="flex flex-col border border-edge rounded-xl bg-surface overflow-hidden">
       {/* 헤더 */}
@@ -82,7 +114,7 @@ export default function NewsColumn({ title, news, accentColor = "#1A56DB", href 
       ) : (
         <div className="divide-y divide-edge">
           {news.map((n, i) => (
-            <NewsRowCard key={`${n.companyId}-${i}`} {...n} />
+            <NewsRowCard key={`${n.companyId}-${i}`} row={n} showCompany={showCompany} />
           ))}
         </div>
       )}

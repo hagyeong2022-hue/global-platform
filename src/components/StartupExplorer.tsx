@@ -4,18 +4,20 @@ import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { Company } from "@/lib/googleSheets";
+import { mergeCompanies, type MergedCompany } from "@/lib/mergeCompanies";
 import StageBadge from "@/components/ui/StageBadge";
 import { countryFlag } from "@/lib/countryFlag";
 
 // ─── 필터 축 정의 ───────────────────────────────────────────
+// 병합본 기준: 한 기업이 여러 값(국가·분야·프로그램·연도)을 가질 수 있으므로 배열로 다룬다.
 type FilterKey = "year" | "industry" | "country" | "program" | "stage";
 
-const FILTER_DEFS: { key: FilterKey; label: string; getValue: (c: Company) => string }[] = [
-  { key: "year", label: "지원 년도", getValue: (c) => c.year },
-  { key: "stage", label: "투자단계", getValue: (c) => c.investmentStage },
-  { key: "industry", label: "분야", getValue: (c) => c.industry },
-  { key: "country", label: "진출 국가", getValue: (c) => c.region },
-  { key: "program", label: "프로그램", getValue: (c) => c.programName },
+const FILTER_DEFS: { key: FilterKey; label: string; getValues: (c: MergedCompany) => string[] }[] = [
+  { key: "year", label: "지원 년도", getValues: (c) => c.years },
+  { key: "stage", label: "투자단계", getValues: (c) => (c.investmentStage ? [c.investmentStage] : []) },
+  { key: "industry", label: "분야", getValues: (c) => c.industries },
+  { key: "country", label: "진출 국가", getValues: (c) => c.regions },
+  { key: "program", label: "프로그램", getValues: (c) => c.programs },
 ];
 
 // ─── 테이블 컬럼 정의 ────────────────────────────────────────
@@ -25,16 +27,16 @@ type ColumnKey =
   | "employment";
 
 // 컬럼 순서 = 필터 드롭다운 순서와 정렬 (분야 → 진출 국가 → 프로그램 → 투자단계)
-const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: Company) => string; csvValue?: (c: Company) => string }[] = [
-  { key: "name", label: "기업명", sortValue: (c) => c.name },
-  { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage },
-  { key: "industry", label: "분야", sortValue: (c) => c.industry },
-  { key: "description", label: "아이템", sortValue: (c) => c.description },
-  { key: "ceoName", label: "대표자", sortValue: (c) => c.ceoName },
-  { key: "country", label: "진출 국가", sortValue: (c) => c.region },
-  { key: "program", label: "프로그램", sortValue: (c) => c.programName },
-  { key: "establishedDate", label: "설립일", sortValue: (c) => c.establishedDate },
-  { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0"), csvValue: (c: Company) => c.employment },
+const COLUMN_DEFS: { key: ColumnKey; label: string; sortValue: (c: MergedCompany) => string; csvValue: (c: MergedCompany) => string }[] = [
+  { key: "name", label: "기업명", sortValue: (c) => c.name, csvValue: (c) => c.name },
+  { key: "stage", label: "투자단계", sortValue: (c) => c.investmentStage, csvValue: (c) => c.investmentStage },
+  { key: "industry", label: "분야", sortValue: (c) => c.industries.join(","), csvValue: (c) => c.industries.join(" / ") },
+  { key: "description", label: "아이템", sortValue: (c) => c.descriptions.join(" "), csvValue: (c) => c.descriptions.join(" / ") },
+  { key: "ceoName", label: "대표자", sortValue: (c) => c.ceoName, csvValue: (c) => c.ceoName },
+  { key: "country", label: "진출 국가", sortValue: (c) => c.regions.join(","), csvValue: (c) => c.regions.join(" / ") },
+  { key: "program", label: "프로그램", sortValue: (c) => c.programs.join(","), csvValue: (c) => c.programs.join(" / ") },
+  { key: "establishedDate", label: "설립일", sortValue: (c) => c.establishedDate, csvValue: (c) => c.establishedDate },
+  { key: "employment", label: "고용(명)", sortValue: (c) => c.employment.padStart(6, "0"), csvValue: (c) => c.employment },
 ];
 
 const DEFAULT_VISIBLE: ColumnKey[] = ["name", "stage", "industry", "description", "ceoName", "country", "program"];
@@ -110,15 +112,12 @@ function MultiSelect({
 }
 
 // ─── CSV 다운로드 ───────────────────────────────────────────
-function downloadCsv(companies: Company[], visibleCols: ColumnKey[]) {
+function downloadCsv(companies: MergedCompany[], visibleCols: ColumnKey[]) {
   const cols = COLUMN_DEFS.filter((c) => visibleCols.includes(c.key));
   const header = cols.map((c) => c.label).join(",");
   const rows = companies.map((c) =>
     cols
-      .map((col) => {
-        const v = (col.csvValue ? col.csvValue(c) : col.sortValue(c)) ?? "";
-        return `"${String(v).replace(/"/g, '""')}"`;
-      })
+      .map((col) => `"${String(col.csvValue(c) ?? "").replace(/"/g, '""')}"`)
       .join(",")
   );
   // BOM으로 엑셀 한글 깨짐 방지
@@ -135,6 +134,9 @@ function downloadCsv(companies: Company[], visibleCols: ColumnKey[]) {
 export default function StartupExplorer({ companies }: { companies: Company[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // 동일 기업(사업자번호/사명) 여러 행 → 1건으로 병합 (중복 제외 기준)
+  const merged = useMemo(() => mergeCompanies(companies), [companies]);
 
   // URL → 필터 상태 (단일 소스: URL)
   const filters = useMemo(() => {
@@ -200,21 +202,23 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
-  // ─── 필터링 ───
+  // ─── 필터링 (다중값 축은 교집합이 있으면 통과) ───
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return companies.filter((c) => {
+    return merged.filter((c) => {
       for (const def of FILTER_DEFS) {
         const sel = filters[def.key];
-        if (sel.length > 0 && !sel.includes(def.getValue(c))) return false;
+        if (sel.length === 0) continue;
+        const vals = def.getValues(c);
+        if (!sel.some((s) => vals.includes(s))) return false;
       }
       if (q) {
-        const haystack = `${c.name} ${c.ceoName} ${c.description} ${c.industry}`.toLowerCase();
+        const haystack = `${c.name} ${c.ceoName} ${c.descriptions.join(" ")} ${c.industries.join(" ")}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
     });
-  }, [companies, filters, query]);
+  }, [merged, filters, query]);
 
   // 정렬
   const sorted = useMemo(() => {
@@ -231,18 +235,22 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
     for (const def of FILTER_DEFS) {
       const counts = new Map<string, number>();
       // 자기 축 제외한 나머지 필터만 적용한 모수에서 집계
-      const base = companies.filter((c) => {
+      const base = merged.filter((c) => {
         for (const other of FILTER_DEFS) {
           if (other.key === def.key) continue;
           const sel = filters[other.key];
-          if (sel.length > 0 && !sel.includes(other.getValue(c))) return false;
+          if (sel.length === 0) continue;
+          const vals = other.getValues(c);
+          if (!sel.some((s) => vals.includes(s))) return false;
         }
         return true;
       });
       for (const c of base) {
-        const v = def.getValue(c).trim();
-        if (!v) continue;
-        counts.set(v, (counts.get(v) ?? 0) + 1);
+        // 기업이 가진 각 값마다 1회 (기업 기준 카운트)
+        for (const v of new Set(def.getValues(c))) {
+          if (!v) continue;
+          counts.set(v, (counts.get(v) ?? 0) + 1);
+        }
       }
       result[def.key] = Array.from(counts.entries())
         .map(([value, count]) => ({ value, count }))
@@ -251,22 +259,22 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
         );
     }
     return result;
-  }, [companies, filters]);
+  }, [merged, filters]);
 
   // 선택된 필터 칩
   const activeChips = FILTER_DEFS.flatMap((def) =>
     filters[def.key].map((v) => ({ key: def.key, label: def.label, value: v }))
   );
 
-  // 미니 KPI
-  const regionCount = new Set(filtered.map((c) => c.region).filter(Boolean)).size;
+  // 미니 KPI — 중복 제외 기업 수 / 고유 진출 국가 수
+  const regionCount = new Set(filtered.flatMap((c) => c.regions)).size;
 
   return (
     <div className="flex flex-col gap-4">
       {/* 미니 KPI */}
       <div className="grid grid-cols-2 gap-4 max-w-md">
         <div className="rounded-xl border border-edge bg-surface px-5 py-4">
-          <p className="text-xs text-secondary">관리 기업 수</p>
+          <p className="text-xs text-secondary">관리 기업 수<span className="ml-1 opacity-60">(중복 제외)</span></p>
           <p className="text-2xl font-bold text-accent tnum mt-1">{filtered.length.toLocaleString()}<span className="text-sm font-medium text-secondary ml-1">개사</span></p>
         </div>
         <div className="rounded-xl border border-edge bg-surface px-5 py-4">
@@ -438,24 +446,37 @@ export default function StartupExplorer({ companies }: { companies: Company[] })
                       </td>
                     )}
                     {visibleCols.includes("industry") && (
-                      <td className="px-4 py-3 whitespace-nowrap text-secondary">{c.industry || "—"}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-secondary">{c.industries.join(", ") || "—"}</td>
                     )}
                     {visibleCols.includes("description") && (
-                      <td className="px-4 py-3 text-secondary max-w-md truncate" title={c.description}>
-                        {c.description || "—"}
+                      <td className="px-4 py-3 text-secondary max-w-md truncate" title={c.descriptions.join(" / ")}>
+                        {c.descriptions.join(" / ") || "—"}
                       </td>
                     )}
                     {visibleCols.includes("ceoName") && (
                       <td className="px-4 py-3 whitespace-nowrap text-secondary">{c.ceoName || "—"}</td>
                     )}
                     {visibleCols.includes("country") && (
-                      <td className="px-4 py-3 whitespace-nowrap text-primary">
-                        {c.region ? `${countryFlag(c.region)} ${c.region}` : "—"}
+                      <td className="px-4 py-3 text-primary">
+                        {c.regions.length ? (
+                          <span className="flex flex-wrap gap-1">
+                            {c.regions.map((r) => (
+                              <span
+                                key={r}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-elevated text-xs whitespace-nowrap"
+                              >
+                                {countryFlag(r)} {r}
+                              </span>
+                            ))}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
                       </td>
                     )}
                     {visibleCols.includes("program") && (
-                      <td className="px-4 py-3 text-secondary max-w-xs truncate" title={c.programName}>
-                        {c.programName || "—"}
+                      <td className="px-4 py-3 text-secondary max-w-xs truncate" title={c.programs.join(" / ")}>
+                        {c.programs.join(", ") || "—"}
                       </td>
                     )}
                     {visibleCols.includes("establishedDate") && (
